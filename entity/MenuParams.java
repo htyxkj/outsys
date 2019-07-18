@@ -3,6 +3,7 @@
  */
 package inetbas.web.outsys.entity;
 
+import inet.PTool;
 import inetbas.cli.cutil.CCliTool;
 
 import java.io.Serializable;
@@ -27,8 +28,8 @@ public class MenuParams implements Serializable {
 	private String pflow=""; // 业务号
 	private String pwfproc=""; // 流程接口 服务端调用
 	private int pattr=0; // pattr 按钮属性，按位运算
-	private String pbds=""; // 其它+
-	
+//	private String pbds=""; // 其它+
+	private Hashtable<String,String> pbds = new Hashtable<String, String>();//其他
 	private boolean beBill=true; //单据类型，true是单据，false是报表
 	
 	private String pclass=""; //小程序
@@ -73,7 +74,7 @@ public class MenuParams implements Serializable {
 			this.pwfproc = hts.get(ICL.pwfproc);
 		}
 		if(hts.containsKey(ICL.pbds)){
-			this.pbds = hts.get(ICL.pbds);
+			PTool.divideURL(this.pbds, hts.get(ICL.pbds));
 		}
 		if(hts.containsKey(ICL.pclass)){
 			this.pclass = hts.get(ICL.pclass);
@@ -140,10 +141,10 @@ public class MenuParams implements Serializable {
 	public void setPattr(int pattr) {
 		this.pattr = pattr;
 	}
-	public String getPbds() {
+	public Hashtable<String,String> getPbds() {
 		return pbds;
 	}
-	public void setPbds(String pbds) {
+	public void setPbds(Hashtable<String,String> pbds) {
 		this.pbds = pbds;
 	}
 

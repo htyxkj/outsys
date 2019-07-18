@@ -57,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cl.ICL;
+
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSON;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
@@ -567,7 +568,7 @@ public class WebServiceAPI extends HttpServlet {
 		String buid = request.getParameter(cl.ICL.pbuid), dbid = request
 				.getParameter("dbid"), userCode = request
 				.getParameter("usercode");
-		String sfld = cl.ICL.DBFILED, s0 = "select " + sfld + ",pbds";
+		String sfld = cl.ICL.DBFILED + ",pbds", s0 = "select " + sfld;
 		HttpSession hss = request.getSession();
 		HashMap<String, Object> mp = APIUtil.getdbuser(dbid, userCode);
 		APIUtil.cpTOHttpSession(mp, hss);
