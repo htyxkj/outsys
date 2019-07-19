@@ -169,6 +169,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 			cells2 = bAidNew.getCells().cels;
 			int t0;
 			sc = CommUtils.getContStr(cells[0], qe.getCont());
+			qe.setCont(null);
 			if (sc != null && sc.length() > 0) {
 				char c0 = sc.charAt(0);
 				if (c0 >= '0' && c0 <= '9') {
@@ -191,12 +192,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 			sc = qe.getCont();
 			cells2 = bAidNew.getCells().find(qe.getTcell()).cels;
 			cellm = cells[1].find(qe.getTcell());
-			
-			
 		}
-		
-		qe.setCont(null);
-
 		boolean b0 = false;
 		st0 = spelSQL(eq, cellm, b0 ? (Cell.PRIMARY | Cell.LIST) : 0, sc, true, st0, this);
 		st0 = SSTool.formatVarMacro(st0, eq);
