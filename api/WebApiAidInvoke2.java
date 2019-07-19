@@ -145,7 +145,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 	}
 
 	/**
-	 * 根据常量ID获取常量信息
+	 * 根据常量ID删除常量信息
 	 * @param eq 数据库链接
 	 * @param clid 常量ID
 	 * @return
