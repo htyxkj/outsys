@@ -191,7 +191,11 @@ public class WebApiAidInvoke2 extends DBInvoke {
 			sc = qe.getCont();
 			cells2 = bAidNew.getCells().find(qe.getTcell()).cels;
 			cellm = cells[1].find(qe.getTcell());
+			
+			
 		}
+		
+		qe.setCont(null);
 
 		boolean b0 = false;
 		st0 = spelSQL(eq, cellm, b0 ? (Cell.PRIMARY | Cell.LIST) : 0, sc, true, st0, this);
@@ -199,6 +203,8 @@ public class WebApiAidInvoke2 extends DBInvoke {
 		SQLInfoE ss = SQLUtils.makeSqlInfo(st0, qe, eq.db_type);
 		String totalSQL = ss.getTotalSql();
 		String pageSQL = ss.getPagingSql();
+		_log.info(totalSQL);
+		_log.info(pageSQL);
 		int total = CCliTool.objToInt(eq.queryOne(totalSQL), 0);
 		if (total > 0) {
 			qe.getPage().setTotal(total);
