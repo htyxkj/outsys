@@ -16,19 +16,19 @@ import inetbas.web.outsys.entity.PageInfo;
  */
 public class UICData implements Serializable {
 	private String obj_id;//对象ID
-	private List<UIRecord> _data, _rmdata;//数据对象集合，移除对象的集合
+	private List<UIRecord> data, rmdata;//数据对象集合，移除对象的集合
 	private int index = -1, attr;
 	private boolean _bnull = true;
 	
 	private PageInfo page = new PageInfo();
 	public UICData() {
-		_data = new ArrayList<UIRecord>();
-		_rmdata = new ArrayList<UIRecord>();
+		data = new ArrayList<UIRecord>();
+		rmdata = new ArrayList<UIRecord>();
 	}
 	
 	public UICData(String obj_id) {
-		_data = new ArrayList<UIRecord>();
-		_rmdata = new ArrayList<UIRecord>();
+		data = new ArrayList<UIRecord>();
+		rmdata = new ArrayList<UIRecord>();
 		this.obj_id = obj_id;
 	}
 	
@@ -36,12 +36,12 @@ public class UICData implements Serializable {
 	 * 增加一条记当。 
 	 */
 	public int add(UIRecord crd, int idx) {
-	 int imx = _data.size();
+	 int imx = data.size();
 	 if (idx < 0 || idx >= imx) {
-	  _data.add(crd);
+	  data.add(crd);
 	  index = imx;
 	 } else {
-	  _data.add(idx, crd);
+	  data.add(idx, crd);
 	  index = idx;
 	 }
 	 _bnull = false;
@@ -54,21 +54,6 @@ public class UICData implements Serializable {
 		this.obj_id = obj_id;
 	}
 
-	public List<UIRecord> get_data() {
-		return _data;
-	}
-
-	public void set_data(List<UIRecord> _data) {
-		this._data = _data;
-	}
-
-	public List<UIRecord> get_rmdata() {
-		return _rmdata;
-	}
-
-	public void set_rmdata(List<UIRecord> _rmdata) {
-		this._rmdata = _rmdata;
-	}
 
 	public int getIndex() {
 		return index;
@@ -100,6 +85,22 @@ public class UICData implements Serializable {
 
 	public void setPage(PageInfo page) {
 		this.page = page;
+	}
+
+	public List<UIRecord> getData() {
+		return data;
+	}
+
+	public void setData(List<UIRecord> data) {
+		this.data = data;
+	}
+
+	public List<UIRecord> getRmdata() {
+		return rmdata;
+	}
+
+	public void setRmdata(List<UIRecord> rmdata) {
+		this.rmdata = rmdata;
 	}
 	
 	

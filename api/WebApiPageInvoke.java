@@ -95,7 +95,7 @@ public class WebApiPageInvoke extends DBInvoke {
 //				JSONObject crd = makeValuesToJSON(cc.getValues(), cell.all_cels);
 //				crd.put("sys_stated", cc.c_state);
 				data.setPage(qEntity.getPage());
-				data.set_data(arr);
+				data.setData(arr);
 //				qEntity.getValues().clear();
 //				qEntity.setValues(arr);
 				return data;
@@ -149,7 +149,7 @@ public class WebApiPageInvoke extends DBInvoke {
 		SQLInfoE ss = SQLUtils.makeSqlInfo(st0,qe,eq.db_type);
 		String totalSQL =  ss.getTotalSql();
 		String pageSQL = ss.getPagingSql();
-		int total = 0;
+//		int total = 0;
 ////		if(qe.getType()==0) {
 //			total = getBillData(eq, cell, qe, dbi, attr, b0, extb, totalSQL, pageSQL);
 ////		}else {
@@ -209,7 +209,7 @@ public class WebApiPageInvoke extends DBInvoke {
 //				ArrayList<JSONObject> arrayList = valuesToJsonArray(v0,cell,b0 ? (Cell.PRIMARY | Cell.LIST) : 0,extb,qe.getType()>0);
 //				qe.setValues(arrayList);
 				List<UIRecord> listData = valuesToJsonArray2(v0,cell,b0 ? (Cell.PRIMARY | Cell.LIST) : 0,extb,qe.getType()>0);
-				data.set_data(listData);
+				data.setData(listData);
 			}
 		}
 		return data;
@@ -329,7 +329,7 @@ public class WebApiPageInvoke extends DBInvoke {
 							UICData uData = new UICData(data.obj_id);
 							HVector hh = data.elements();
 							ArrayList<UIRecord> arr1 = valuesToJsonArray2(hh, scel, 0, null,report);
-							uData.set_data(arr1);
+							uData.setData(arr1);
 							subs.add(uData);
 						}
 					}
