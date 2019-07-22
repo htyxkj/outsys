@@ -5,11 +5,12 @@ package inetbas.web.outsys.api;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONObject;
 
 import inet.CRuntimeException;
 import inet.HVector;
@@ -22,6 +23,8 @@ import inetbas.pub.coob.Cells;
 import inetbas.serv.csys.DBInvoke;
 import inetbas.sserv.SQLExecQuery;
 import inetbas.sserv.SSTool;
+import inetbas.web.outsys.api.uidata.UICData;
+import inetbas.web.outsys.api.uidata.UIRecord;
 import inetbas.web.outsys.entity.QueryEntity;
 import inetbas.web.outsys.tools.CellsUtil;
 import inetbas.web.outsys.tools.CommUtils;
@@ -87,12 +90,15 @@ public class WebApiPageInvoke extends DBInvoke {
 			if(cc!=null) {
 				HVector hh = new HVector();
 				hh.addElement(cc);
-				ArrayList<JSONObject> arr = valuesToJsonArray(hh, cell, 0, null,qEntity.getType()==1);
+				UICData data = new UICData(cell.obj_id);
+				ArrayList<UIRecord> arr = valuesToJsonArray2(hh, cell, 0, null,qEntity.getType()==1);
 //				JSONObject crd = makeValuesToJSON(cc.getValues(), cell.all_cels);
 //				crd.put("sys_stated", cc.c_state);
-				qEntity.getValues().clear();
-				qEntity.setValues(arr);
-				return qEntity;
+				data.setPage(qEntity.getPage());
+				data.set_data(arr);
+//				qEntity.getValues().clear();
+//				qEntity.setValues(arr);
+				return data;
 			}	
 		}
 		return null;
@@ -144,23 +150,27 @@ public class WebApiPageInvoke extends DBInvoke {
 		String totalSQL =  ss.getTotalSql();
 		String pageSQL = ss.getPagingSql();
 		int total = 0;
-//		if(qe.getType()==0) {
-			total = getBillData(eq, cell, qe, dbi, attr, b0, extb, totalSQL, pageSQL);
-//		}else {
-//			// 报表
-//			_log.info(totalSQL);
-//			_log.info(pageSQL);
-//		}
-		qe.getPage().setTotal(total);
-		return qe;
+////		if(qe.getType()==0) {
+//			total = getBillData(eq, cell, qe, dbi, attr, b0, extb, totalSQL, pageSQL);
+////		}else {
+////			// 报表
+////			_log.info(totalSQL);
+////			_log.info(pageSQL);
+////		}
+//		qe.getPage().setTotal(total);
+//		return qe;
+		return getBillData(eq, cell, qe, dbi, attr, b0, extb, totalSQL, pageSQL);
 	}
 
-	public static int getBillData(SQLExecQuery eq, Cells cell, QueryEntity qe, DBInvoke dbi, long attr, boolean b0,
+	public static UICData getBillData(SQLExecQuery eq, Cells cell, QueryEntity qe, DBInvoke dbi, long attr, boolean b0,
 			String extb, String totalSQL, String pageSQL) throws Exception {
 		int t0;
 		int total;
 		_log.info(totalSQL);
+		UICData data = new UICData(cell.obj_id);
 		total = CCliTool.objToInt(eq.queryOne(totalSQL), 0);
+		data.setPage(qe.getPage());
+		data.getPage().setTotal(total);
 		if (total > 0) {
 			_log.info("查询页面数据：" + pageSQL);
 			HVector v0 = eq.queryVec(pageSQL);
@@ -196,11 +206,13 @@ public class WebApiPageInvoke extends DBInvoke {
 					Object o1 = dbi == null ? findRecord(eq, cell, rfs, 3, null, true) : dbi.findRecord(eq, cell, rfs, 3, true);
 					v0.setElementAt(o1, 0);
 				}
-				ArrayList<JSONObject> arrayList = valuesToJsonArray(v0,cell,b0 ? (Cell.PRIMARY | Cell.LIST) : 0,extb,qe.getType()>0);
-				qe.setValues(arrayList);
+//				ArrayList<JSONObject> arrayList = valuesToJsonArray(v0,cell,b0 ? (Cell.PRIMARY | Cell.LIST) : 0,extb,qe.getType()>0);
+//				qe.setValues(arrayList);
+				List<UIRecord> listData = valuesToJsonArray2(v0,cell,b0 ? (Cell.PRIMARY | Cell.LIST) : 0,extb,qe.getType()>0);
+				data.set_data(listData);
 			}
 		}
-		return total;
+		return data;
 	}
 	
 	/**
@@ -273,6 +285,71 @@ public class WebApiPageInvoke extends DBInvoke {
 		return arrayList;
 	}
 	
+	/**
+	 * @param v0
+	 * @param cell
+	 * @param qe
+	 * 2019-03-22 14:55:34
+	 */
+	public static ArrayList<UIRecord> valuesToJsonArray2(HVector v0, Cells cell,long attr,String extb,boolean report) {
+		ArrayList<UIRecord> arrayList = new ArrayList<UIRecord>();
+		if(report) {
+			
+			for(int i=0;i<v0.size();i++) {
+				Object[] v1 = (Object[]) v0.elementAt(i);
+				UIRecord jsonObject = makeValuesToUIRecord(v1, cell.db_cels);
+				arrayList.add(jsonObject);
+			}
+			return arrayList;
+		}
+		boolean b2 = extb != null && extb.length() > 0;
+		String s0 = cell.toSQLString(false, attr, false, false, true, b2);
+		String[] flds = s0.split(",");
+		Cell[] cc = cell.getCCells(CCliTool.toIndexs(cell, flds, 0));
+		for(int i=0;i<v0.size();i++) {
+			Object o1 = v0.elementAt(i);
+			if(o1==null) {
+				continue;
+			}
+			UIRecord uiRecord = null;
+			if(o1 instanceof CRecord) {
+				CRecord c1 = (CRecord)o1;
+				Object[] v1 = c1.getValues();
+				uiRecord = makeValuesToUIRecord(v1, cell.db_cels);
+				uiRecord.setC_state(c1.c_state);
+//				jsonObject.put("sys_stated", c1.c_state);
+				int t0 = cell.getChildCount();
+				List<UICData> subs = new ArrayList<UICData>();
+				if(t0>0) {
+					for(int k=0;k<t0;k++) {
+						Cells scel = cell.getChild(k);
+						CData data = c1.getChild(k);
+						
+						if(data!=null) {
+							UICData uData = new UICData(data.obj_id);
+							HVector hh = data.elements();
+							ArrayList<UIRecord> arr1 = valuesToJsonArray2(hh, scel, 0, null,report);
+							uData.set_data(arr1);
+							subs.add(uData);
+						}
+					}
+					uiRecord.setSubs(subs);
+				}
+//				arrayList.add(uiRecord);
+			} else {
+				Object[] v1 = null;
+				if(cc.length==1) {
+					v1 = new Object[] {o1};
+				}else {
+					v1 = (Object[])o1;
+				}
+				uiRecord = makeValuesToUIRecord(v1, cc);
+			}
+			arrayList.add(uiRecord);
+		}
+		return arrayList;
+	}
+	
 	public static JSONObject makeValuesToJSON(Object[] vl,Cell[] cells){
 		JSONObject json = new JSONObject();
 		for(int i=0;i<cells.length;i++) {
@@ -288,5 +365,12 @@ public class WebApiPageInvoke extends DBInvoke {
 			}	
 		}
 		return json;
+	}
+	
+	public static UIRecord makeValuesToUIRecord(Object[] vl,Cell[] cells){
+		UIRecord cRecord = new UIRecord();
+		JSONObject json = makeValuesToJSON(vl, cells);
+		cRecord.setData(json);
+		return cRecord;
 	}
 }

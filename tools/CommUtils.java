@@ -257,6 +257,7 @@ public class CommUtils {
 	        Pattern pattern = Pattern.compile("^-?\\d+(\\.\\d+)?$");
 	        return pattern.matcher(string).matches();
 	    }
+	   
 	
 	
 }

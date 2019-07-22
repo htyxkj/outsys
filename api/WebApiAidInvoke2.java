@@ -6,6 +6,8 @@ import inetbas.pub.coob.Cells;
 import inetbas.serv.csys.DBInvoke;
 import inetbas.sserv.SQLExecQuery;
 import inetbas.sserv.SSTool;
+import inetbas.web.outsys.api.uidata.UICData;
+import inetbas.web.outsys.api.uidata.UIRecord;
 import inetbas.web.outsys.entity.BipInsAidNew;
 import inetbas.web.outsys.entity.BipInsAidType;
 import inetbas.web.outsys.entity.QueryEntity;
@@ -21,14 +23,12 @@ import inetbas.webserv.WebAppPara;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
-import org.junit.experimental.theories.Theories;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSON;
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 
 import inet.HVector;
 
@@ -64,8 +64,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 				return getBipInsAidInfoById(eq, oid, true);
 			} else if (id == AID_DATA) {
 				QueryEntity qe = (QueryEntity) wa.params[1];
-				qe = getBipInsAidDatas(eq, oid, qe);
-				return qe;
+				return getBipInsAidDatas(eq, oid, qe);
 			} else if (id == AID_GDIC_UNIT) {
 				return getGdicUnitInfoByGbm(eq, oid);
 			} else if (id == AID_CL) {
@@ -132,7 +131,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 		return bipInsAid;
 	}
 
-	public QueryEntity getBipInsAidDatas(SQLExecQuery eq, String oid, QueryEntity qe) throws Exception {
+	public Object getBipInsAidDatas(SQLExecQuery eq, String oid, QueryEntity qe) throws Exception {
 		BipInsAidNew bAidNew = getBipInsAidInfoById(eq, oid, false);
 		if (bAidNew != null && qe != null) {
 			if (sqlTypes.containsKey(bAidNew.getbType())) {
@@ -149,7 +148,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 		return qe;
 	}
 
-	public QueryEntity getQueryEditorDatas(SQLExecQuery eq, QueryEntity qe, BipInsAidNew bAidNew) throws Exception {
+	public Object getQueryEditorDatas(SQLExecQuery eq, QueryEntity qe, BipInsAidNew bAidNew) throws Exception {
 		Cells[] cells = (Cells[]) CellsSessionUtil.getCellsByCellId(eq.db_id, bAidNew.getSlink());
 		if (cells == null) {
 			cells = (Cells[]) SSTool.readCCells(eq, bAidNew.getSlink(), false);
@@ -202,10 +201,19 @@ public class WebApiAidInvoke2 extends DBInvoke {
 		_log.info(totalSQL);
 		_log.info(pageSQL);
 		int total = CCliTool.objToInt(eq.queryOne(totalSQL), 0);
+		UICData data = new UICData(cellm.obj_id);
+		data.setPage(qe.getPage());
+		data.getPage().setTotal(total);
 		if (total > 0) {
-			qe.getPage().setTotal(total);
 			HVector hh = eq.queryVec(pageSQL);
 			if (hh != null) {
+				for(int i=0;i<hh.size();i++) {
+					Object[] o0 = (Object[])hh.elementAt(i);
+					UIRecord record = new UIRecord();
+					JSONObject jdata = objectsToJsonObj(o0,cells2);
+					record.setData(jdata);
+					data.add(record, -1);
+				}
 				ArrayList<JSONObject> list = hvectorToArray(hh, cells2);
 				qe.setValues(list);
 			} else {
@@ -214,7 +222,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 		}
 		_log.info(totalSQL);
 		_log.info(pageSQL);
-		return qe;
+		return data;
 	}
 
 	/***
@@ -330,6 +338,18 @@ public class WebApiAidInvoke2 extends DBInvoke {
 			list.add(jo);
 		}
 		return list;
+	}
+	
+	public static JSONObject objectsToJsonObj(Object[] oo, LayCell[] cells) {
+		JSONObject jo = new JSONObject();
+		for (int m = 0; m < cells.length && m < oo.length; m++) {
+			LayCell cell = cells[m];
+			if (cell.type == 91 || cell.type == 93) {
+				jo.put(cell.id, CCliTool.dateToString(oo[m], true, cell.type == 91 ? 1 : 8));
+			} else
+				jo.put(cell.id, oo[m]);
+		}
+		return jo;
 	}
 
 	/**
