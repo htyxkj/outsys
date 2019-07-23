@@ -1142,6 +1142,7 @@ public class WebServiceAPI extends HttpServlet {
 					UIRecord uir = uicd.getRmdata().get(i);
 					CRecord cr0 = makeSysRecord(subcell, uir);
 					cData.add(cr0, -1);
+					cData.remove(uicd.getData().size(),subcell.pkIndexs());
 				}
 				if(cData.size()>0){
 					cr.addChild(cData);
@@ -1149,7 +1150,7 @@ public class WebServiceAPI extends HttpServlet {
 			}
 		}
 	}
-	
+
 //	private CData getChildDataBySubCell(Cells subcell,String childbb){
 //		CData cData = new CData(subcell.obj_id);
 //		JSONArray dd = JSON.parseArray(childbb);

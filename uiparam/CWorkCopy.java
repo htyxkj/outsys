@@ -3,12 +3,11 @@
  */
 package inetbas.web.outsys.uiparam;
 
+import inetbas.pub.coob.Cells;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
-import inetbas.pub.coob.Cell;
-import inetbas.pub.coob.Cells;
 
 /**
  * 拷贝定义参数
