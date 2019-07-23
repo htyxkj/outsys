@@ -12,6 +12,8 @@ import inetbas.pub.cutil.CPubTool;
 import inetbas.sserv.SQLConnection;
 import inetbas.sserv.SQLExecQuery;
 import inetbas.web.cutil.WAToolkit;
+import inetbas.web.outsys.api.uidata.UICData;
+import inetbas.web.outsys.api.uidata.UIRecord;
 import inetbas.web.outsys.entity.DempInfo;
 import inetbas.web.outsys.entity.Menu;
 import inetbas.web.outsys.entity.MenuParams;
@@ -45,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletOutputStream;
@@ -58,9 +61,8 @@ import org.slf4j.LoggerFactory;
 
 import cl.ICL;
 
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSON;
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 
 /**
  * @author www.bip-soft.com
@@ -1097,8 +1099,20 @@ public class WebServiceAPI extends HttpServlet {
 	 * @return
 	 */
 	private CRecord makeCRecordByJsonStr(Cells cells, String jsonData) {
-		JSONObject cc = JSON.parseObject(jsonData);
-		int state = CCliTool.objToInt(cc.get("sys_stated"),3);
+		UIRecord uir = JSON.parseObject(jsonData, UIRecord.class);
+		CRecord cr = makeSysRecord(cells, uir);
+		makeSubData(cells, cr, uir.getSubs());
+		return cr;
+	}
+	/**
+	 * 组成CRecord数据
+	 * @param cells
+	 * @param uir
+	 * @return
+	 */
+	private CRecord makeSysRecord(Cells cells, UIRecord uir) {
+		JSONObject cc = uir.getData();
+		int state = uir.getC_state();
 		CRecord cr = new CRecord(state);
 		for (int i = 0; i < cells.db_cels.length; i++) {
 			Cell c = cells.db_cels[i];
@@ -1107,51 +1121,65 @@ public class WebServiceAPI extends HttpServlet {
 			}else
 			cr.setValue(cc.get(c.ccName), i);
 		}
-		makeSubData(cells, cr, cc);
 		return cr;
 	}
 
-	private void makeSubData(Cells cells, CRecord cr, JSONObject cc) {
-		for (int i = 0; i < cells.getChildCount(); i++) {
-			Cells subcell = cells.getChild(i);
-			String childbb = CCliTool.objToString(cc.get(subcell.obj_id));
-			if (childbb == null)
-				continue;
-			CData cData = getChildDataBySubCell(subcell, childbb);
-			cr.addChild(cData);
+	private void makeSubData(Cells cells, CRecord cr, List<UICData> cc) {
+		for(int j=0;j<cc.size();j++){
+			UICData uicd = cc.get(j);
+			Cells subcell = cells.find(uicd.getObj_id());
+			if(subcell != null){
+				CData cData = new CData(subcell.obj_id);
+				for(int i=0;i<uicd.getData().size();i++){
+					UIRecord uir = uicd.getData().get(i);
+					CRecord cr0 = makeSysRecord(subcell, uir);
+					if(subcell.getChildCount() > 0){
+						makeSubData(subcell, cr0, uir.getSubs());
+					}
+					cData.add(cr0, -1);
+				}
+				for(int i=0;i<uicd.getRmdata().size();i++){
+					UIRecord uir = uicd.getRmdata().get(i);
+					CRecord cr0 = makeSysRecord(subcell, uir);
+					cData.add(cr0, -1);
+				}
+				if(cData.size()>0){
+					cr.addChild(cData);
+				}
+			}
 		}
 	}
 	
-	private CData getChildDataBySubCell(Cells subcell,String childbb){
-		CData cData = new CData(subcell.obj_id);
-		JSONArray dd = JSON.parseArray(childbb);
-		HVector delhv = new HVector();
-		for(int j=0;j<dd.size();j++){
-			JSONObject subJsonO = dd.getJSONObject(j);
-			int state = CCliTool.objToInt(subJsonO.get("sys_stated"), 3);
-			CRecord crd = new CRecord(0);
-			for(int k=0;k<subcell.db_cels.length;k++){
-				Cell c0 = subcell.db_cels[k];
-				if(c0.ccType==3) {
-					crd.setValue(CCliTool.objToDecimal(subJsonO.get(c0.ccName),false,BigDecimal.ZERO), k);
-				}else
-				crd.setValue(subJsonO.get(c0.ccName), k);
-			}
-			makeSubData(subcell,crd,subJsonO);
-			crd.c_state = state;
-			if(crd.c_state == 4){
-				delhv.addElement(j);
-			}
-			cData.add(crd, -1);
-		}
-		for(int i=0;i<delhv.size();i++){
-			int line = CCliTool.objToInt(delhv.elementAt(i),-1);
-			if(line>0){
-				cData.remove(line, subcell.pkIndexs());
-			}
-		}
-		return cData;
-	}
+//	private CData getChildDataBySubCell(Cells subcell,String childbb){
+//		CData cData = new CData(subcell.obj_id);
+//		JSONArray dd = JSON.parseArray(childbb);
+//		HVector delhv = new HVector();
+//		for(int j=0;j<dd.size();j++){
+//			JSONObject subJsonO = dd.getJSONObject(j);
+//			int state = CCliTool.objToInt(subJsonO.get("sys_stated"), 3);
+//			CRecord crd = new CRecord(0);
+//			for(int k=0;k<subcell.db_cels.length;k++){
+//				Cell c0 = subcell.db_cels[k];
+//				if(c0.ccType==3) {
+//					crd.setValue(CCliTool.objToDecimal(subJsonO.get(c0.ccName),false,BigDecimal.ZERO), k);
+//				}else
+//				crd.setValue(subJsonO.get(c0.ccName), k);
+//			}
+//			makeSubData(subcell,crd,subJsonO);
+//			crd.c_state = state;
+//			if(crd.c_state == 4){
+//				delhv.addElement(j);
+//			}
+//			cData.add(crd, -1);
+//		}
+//		for(int i=0;i<delhv.size();i++){
+//			int line = CCliTool.objToInt(delhv.elementAt(i),-1);
+//			if(line>0){
+//				cData.remove(line, subcell.pkIndexs());
+//			}
+//		}
+//		return cData;
+//	}
 	
 	public void findValues(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
@@ -1752,8 +1780,8 @@ public class WebServiceAPI extends HttpServlet {
 
 	public static String getJsonString(Object o0) {
 		try {
-			Object oo = JSON.toJSON(o0);
-			return oo.toString();
+			Object o1 = JSONObject.toJSONString(o0);
+			return o1.toString();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

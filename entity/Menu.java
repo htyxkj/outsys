@@ -3,7 +3,8 @@ package inetbas.web.outsys.entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.annotation.JSONField;
+import com.alibaba.fastjson.annotation.JSONField;
+
 
 /**
  * Created by www.bip-soft.com on 2017/5/17.

@@ -3,15 +3,6 @@
  */
 package inetbas.web.outsys.api;
 
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.alibaba.fastjson.JSONObject;
-
 import inet.CRuntimeException;
 import inet.HVector;
 import inetbas.cli.cutil.CCliTool;
@@ -32,6 +23,15 @@ import inetbas.web.outsys.tools.SQLInfoE;
 import inetbas.web.outsys.tools.SQLUtils;
 import inetbas.webserv.SErvVars;
 import inetbas.webserv.WebAppPara;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.alibaba.fastjson.JSONObject;
 
 /**
  * 单据界面数据查询
@@ -361,7 +361,6 @@ public class WebApiPageInvoke extends DBInvoke {
 				json.put(cell.ccName, vv);
 			} else {
 				json.put(cell.ccName, ov);
-//				json.put(cell.ccName, CCliTool.objToString(ov));
 			}	
 		}
 		return json;
