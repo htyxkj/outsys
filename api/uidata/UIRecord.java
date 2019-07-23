@@ -6,6 +6,7 @@ package inetbas.web.outsys.api.uidata;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.alibaba.fastjson.JSONObject;
 
@@ -18,6 +19,8 @@ public class UIRecord implements Serializable {
 	private int c_state;//数据记录状态
 	private JSONObject data = new JSONObject(); //实际数据
 	private List<UICData> subs = new ArrayList<UICData>();//子项数据
+	
+	public String id = UUID.randomUUID().toString().toLowerCase();//主键ID
 	public UIRecord(){
 	}
 	public UIRecord(int state){
