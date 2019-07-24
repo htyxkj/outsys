@@ -138,7 +138,7 @@ public class WebApiPageInvoke extends DBInvoke {
 			b0 = false;
 		}
 		String extb = st0;
-		st0 = spelSQL(eq, cell, b0 ? (Cell.PRIMARY | Cell.LIST) : 0, sc, true, st0, dbi);
+		st0 = spelSQL(eq, cell, 0, sc, true, st0, dbi);
 		st0 = SSTool.formatVarMacro(st0, eq);
 		if(!CCliTool.isNull(qe.getCont(), true)) {
 			String cont = qe.getCont().trim();
@@ -208,7 +208,7 @@ public class WebApiPageInvoke extends DBInvoke {
 				}
 //				ArrayList<JSONObject> arrayList = valuesToJsonArray(v0,cell,b0 ? (Cell.PRIMARY | Cell.LIST) : 0,extb,qe.getType()>0);
 //				qe.setValues(arrayList);
-				List<UIRecord> listData = valuesToJsonArray2(v0,cell,b0 ? (Cell.PRIMARY | Cell.LIST) : 0,extb,qe.getType()>0);
+				List<UIRecord> listData = valuesToJsonArray2(v0,cell, 0,extb,qe.getType()>0);
 				data.setData(listData);
 			}
 		}
