@@ -1,5 +1,6 @@
 package inetbas.web.outsys.api;
 
+import inet.HVector;
 import inetbas.cli.cutil.CCliTool;
 import inetbas.pub.coob.Cell;
 import inetbas.pub.coob.Cells;
@@ -30,8 +31,6 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
-import inet.HVector;
-
 /**
  * 辅助、常量、自定义sql、变量查询服务
  * 
@@ -47,6 +46,13 @@ public class WebApiAidInvoke2 extends DBInvoke {
 	private static final String REDISAID = ".BipInsAidNew.";// 储存在redis中的 辅助部分标识
 	private static final String REDISAIDCL = ".BipInsAidNew.CL.";// 储存在redis中的 常量部分标识
 	private static HashMap<BipInsAidType, BipInsAidType> sqlTypes = new HashMap<BipInsAidType, BipInsAidType>();
+	
+	public static final int AID_I_UPDATE = 500;//更新redis中辅助信息
+	public static final int AID_CL_UPDATE = 600;//更新redis中常量信息
+	
+	public static final int AID_I_DEL = 550;//更新redis中辅助信息
+	public static final int AID_CL_DEL = 650;//更新redis中常量信息
+	
 	static {
 		sqlTypes.put(BipInsAidType.CSelectEditor, BipInsAidType.CSelectEditor);
 		sqlTypes.put(BipInsAidType.CDynaEditor, BipInsAidType.CDynaEditor);
@@ -61,14 +67,22 @@ public class WebApiAidInvoke2 extends DBInvoke {
 		String oid = CCliTool.objToString(wa.params[0]);
 		if (oid != null) {
 			if (id == AID_I) {
-				return getBipInsAidInfoById(eq, oid, true);
+				return getBipInsAidInfoById(eq, oid, true,false);
 			} else if (id == AID_DATA) {
 				QueryEntity qe = (QueryEntity) wa.params[1];
 				return getBipInsAidDatas(eq, oid, qe);
 			} else if (id == AID_GDIC_UNIT) {
 				return getGdicUnitInfoByGbm(eq, oid);
 			} else if (id == AID_CL) {
-				return getCLInfoById(eq, oid);
+				return getCLInfoById(eq, oid,true);
+			}else if (id == AID_I_UPDATE){
+				getBipInsAidInfoById(eq, oid, true,true);
+			} else if (id == AID_CL_UPDATE){
+				getCLInfoById(eq, oid,true);
+			} else if (id == AID_I_DEL){
+				delBipInsAidInfoById(eq,oid);
+			} else if (id == AID_CL_DEL){
+				delCLInfoById(eq, oid);
 			}
 		}
 		return null;
@@ -82,11 +96,11 @@ public class WebApiAidInvoke2 extends DBInvoke {
 	 * @throws Exception
 	 * 2019-07-11 17:39:59
 	 */
-	public Object getCLInfoById(SQLExecQuery eq, String clid) throws Exception {
+	public Object getCLInfoById(SQLExecQuery eq, String clid,boolean initRedis) throws Exception {
 		String key = eq.db_id + REDISAIDCL + clid;
 		String ass = RedisHelper.get(key);
 		BipInsAidNew bipInsAid = null;
-		if (ass != null) {
+		if (ass != null && !initRedis) {
 			bipInsAid = JSONObject.parseObject(ass, BipInsAidNew.class);
 			return bipInsAid;
 		}
@@ -131,8 +145,21 @@ public class WebApiAidInvoke2 extends DBInvoke {
 		return bipInsAid;
 	}
 
+	/**
+	 * 根据常量ID删除常量信息
+	 * @param eq 数据库链接
+	 * @param clid 常量ID
+	 * @return
+	 * @throws Exception
+	 * 2019-07-11 17:39:59
+	 */
+	public void delCLInfoById(SQLExecQuery eq, String clid) throws Exception {
+		String key = eq.db_id + REDISAIDCL + clid;
+		RedisHelper.delAllObject(key); 
+	}
+	
 	public Object getBipInsAidDatas(SQLExecQuery eq, String oid, QueryEntity qe) throws Exception {
-		BipInsAidNew bAidNew = getBipInsAidInfoById(eq, oid, false);
+		BipInsAidNew bAidNew = getBipInsAidInfoById(eq, oid, false,false);
 		if (bAidNew != null && qe != null) {
 			if (sqlTypes.containsKey(bAidNew.getbType())) {
 				// SQL语句辅助查询
@@ -377,6 +404,21 @@ public class WebApiAidInvoke2 extends DBInvoke {
 		return null;
 	}
 
+	
+	/***
+	 * 根据辅助ID删除缓存信息
+	 * @param eq
+	 * @param id
+	 * @param binit
+	 * @param initRedis
+	 * @return
+	 */
+	public static void delBipInsAidInfoById(SQLExecQuery eq, String id) {
+		// Redis中存储的Key值
+		String key = eq.db_id + REDISAID + id;
+		// 从redis中获删除助定义
+		RedisHelper.delAllObject(key);
+	}
 	/***
 	 * 根据辅助ID查找辅助信息
 	 * 
@@ -385,25 +427,25 @@ public class WebApiAidInvoke2 extends DBInvoke {
 	 * @return 辅助对象 2019-07-08 09:42:55
 	 * @throws Exception
 	 */
-	public static BipInsAidNew getBipInsAidInfoById(SQLExecQuery eq, String id, boolean binit) {
+	public static BipInsAidNew getBipInsAidInfoById(SQLExecQuery eq, String id, boolean binit,boolean initRedis) {
 		// 从redis中获取辅助定义
 		BipInsAidNew bipInsAid = null;
 		// Redis中存储的Key值
 		String key = eq.db_id + REDISAID + id;
 		// 从redis中获取辅助定义
 		String ass = RedisHelper.get(key);
-		if (ass != null) {
+		if (ass != null && !initRedis) {
 			bipInsAid = JSONObject.parseObject(ass, BipInsAidNew.class);
-			if (binit)
+			if (binit && !bipInsAid.getbType().equals(BipInsAidType.CQueryEditor))
 				bipInsAid.setSlink(null);
 			return bipInsAid;
 		}
 		synchronized (key.intern()) {
 			// 二次获取
 			ass = RedisHelper.get(key);
-			if (ass != null) {
+			if (ass != null  && !initRedis) {
 				bipInsAid = JSONObject.parseObject(ass, BipInsAidNew.class);
-				if (binit)
+				if (binit && !bipInsAid.getbType().equals(BipInsAidType.CQueryEditor))
 					bipInsAid.setSlink(null);
 				return bipInsAid;
 			}
@@ -422,7 +464,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 					initBipAidType(bipInsAid, sclass);
 					bipInsAid = initAidCells(eq, bipInsAid);
 					RedisHelper.setNoTime(key, JSON.toJSONString(bipInsAid));
-					if (binit)
+					if (binit && !bipInsAid.getbType().equals(BipInsAidType.CQueryEditor))
 						bipInsAid.setSlink(null);
 				}
 			} catch (Exception e) {
