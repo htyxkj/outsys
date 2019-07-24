@@ -76,7 +76,6 @@ public class WebServiceAPI extends HttpServlet {
 	public static final String APIPera = "inetbas.web.outsys.api.WebOperationInvoke";//凭证
 	public static final String APIWork = "inetbas.web.outsys.api.WebApiWorkInvoke";//审批
 	public static final String APIRQ = "inetbas.web.outsys.api.WebRabbitMQInvoke";//RabbitMQ
-	public static final String APIAID = "inetbas.web.outsys.api.WebApiAidInvoke";//辅助、常量、自定义sql、变量查询服务
 	public static final String APIAID2 = "inetbas.web.outsys.api.WebApiAidInvoke2";//辅助、常量、自定义sql、变量查询服务
 	public static final String APIWorkFlow = "inetbas.web.outsys.api.WebApiWorkFlowInvoke";//工作流
 	public static final String APIPage = "inetbas.web.outsys.api.WebApiPageInvoke";//工作流
@@ -106,17 +105,10 @@ public class WebServiceAPI extends HttpServlet {
 				getMenuParams(request, response);
 			}else if (APIConst.APIID_CELLPARAMS.equals(apiStr)) {//获取cell元素  参数：dbid,usercode,pcell
 				getMenuCells(request, response); 
-			}else if (APIConst.APIID_CELLPARAM.equals(apiStr)){
-				//获取cell元素和初始化数据       参数：dbid,usercode,pcell,pdata(取数条件)，bebill是否是单据（1，单据，其他：报表）
-				getMenuCellsAndData(request, response); 
 			}else if(APIConst.APIID_OPERATION.equals(apiStr)){//获取业务定义
 				getOperationInfo(request,response);
 			}else if (APIConst.APIID_SAVEDATA.equals(apiStr)){//保存或者删除数据
 				saveData(request,response);
-			}else if (APIConst.APIID_AID.equals(apiStr) || APIConst.APIID_CONSTANT.equals(apiStr)){//获取辅助基本信息,常量基本信息以及数据
-				makeAssistInfo(request, response);
-			}else if (APIConst.APIID_AIDDATA.equals(apiStr)){//获取辅助数据
-				makeAssistData(request, response);
 			}else if (APIConst.APIID_FINDDATA.equals(apiStr)){//查询对象数据
 				findValues(request, response);
 			} else if(APIConst.APIID_CHKUP.equals(apiStr)) {
@@ -401,7 +393,7 @@ public class WebServiceAPI extends HttpServlet {
 			APIUtil.cpTOHttpSession(mp, hss); 
 			String varid = "BWBLOGKEY";
 			String key0 = null;//CMain.getGBVar("D.DBOAKEY");
-			Object o0 = universaInvoke(WebApiAidInvoke.AID_V, APIAID, null, new Object[] {varid}, false, hss);
+			Object o0 = universaInvoke(WebApiAidInvoke2.AID_CL, APIAID2, null, new Object[] {varid}, false, hss);
 			key0 = CCliTool.objToString(o0);
 			if(key0==null)
 				key0 =  BIKey;
@@ -704,114 +696,6 @@ public class WebServiceAPI extends HttpServlet {
 		WriteJsonString(response, reoReturnObj);
 	}
 	
-	/***
-	 * 获取cell元素和初始化数据
-	 * @param request
-	 * request 中参数：dbid,usercode,pcell,pdata(取数条件)，bebill是否是单据（1，单据，其他：报表）
-	 * @param response
-	 * @throws Exception
-	 */
-	@SuppressWarnings("unchecked")
-	protected void  getMenuCellsAndData(HttpServletRequest request,HttpServletResponse response) throws Exception {
-		String dbid = request
-				.getParameter("dbid"), userCode = request
-				.getParameter("usercode");
-		String pcell = request.getParameter(cl.ICL.pcell);
-		String pdata1 = request.getParameter(cl.ICL.pdata);
-		if(pdata1 == null || pdata1.equals("{}")){
-			pdata1 = "";
-		}
-//		String pdata =new String(pdata1.getBytes(ISO8859),UTF8);// request.getParameter(cl.ICL.pdata);
-		String pdata =decode(pdata1);// request.getParameter(cl.ICL.pdata);
-		String pbill = request.getParameter("bebill");
-		int bid = CCliTool.objToInt(pbill, 1);
-		boolean isbill = bid==1;
-		HttpSession hss = request.getSession();
-		HashMap<String, Object> mp = APIUtil.getdbuser(dbid, userCode);
-		APIUtil.cpTOHttpSession(mp, hss);
-		ReturnObj reoReturnObj = new ReturnObj();
-		if(!checkLogin(response, hss, reoReturnObj))
-			return ;
-		
-		Object cells = getCellsBypcell(pcell, hss);
-		Cells c1 = null,tjcell=null;
-		if (cells instanceof Cells) {
-			c1 = (Cells) cells;
-			c1.init();
-			CellsUtil.initCells(((Cells) cells));
-			c1 = (Cells)universaInvoke(WebApiInvoke.API_InitCelInc, APIIV, null, new Object[]{cells}, false, hss);
-			
-		} else {
-			Cells[] cells2 = (Cells[]) cells;
-			CellsUtil.initCells(cells2);
-			for (int i = 0; i < cells2.length; i++) {
-				Cells ci = cells2[i];
-				if((ci.attr & ICL.ocCondiction) > 0 && !isbill){
-					tjcell = ci;
-				}
-				if ((ci.attr & ICL.ocCondiction) == 0) {
-					c1 = (Cells)universaInvoke(WebApiInvoke.API_InitCelInc, APIIV, null, new Object[]{ci}, false, hss);
-//					c1 = ci;
-					break;
-				}
-			}
-		}
-		int currPage = CCliTool.objToInt(request.getParameter("currentPage"),0);
-		_log.info("currentPage:"+currPage);
-		int pageSize = CCliTool.objToInt(request.getParameter("pageSize"),20);
-		_log.info("pageSize:"+pageSize);
-		String cellid=request.getParameter("cellid");
-		cellid = cellid==null ? "" : cellid;
-		if(cellid.length()>0){
-			c1 = c1.getChild(cellid, false);
-		}
-		Map<String, Object> retMap = new HashMap<String, Object>();
-		if(!isbill&&tjcell!=null){
-			LayCells contLayCel = new LayCells(tjcell);
-			retMap.put("contCel", contLayCel);
-		}
-		LayCells layCells = new LayCells(c1);
-		boolean isopenTjnow = false;
-		String groupStr1 = "",sumfildstr = "";
-		Cells cc = null;
-		String pbuid = request.getParameter(cl.ICL.pbuid);
-		if(pbuid!=null&&pbuid.length()>0){
-			Object o0 = makeCountCell(hss,c1,pbuid);
-			if(!CCliTool.isNull(o0, true)){
-				Object[] oo1 = (Object[])o0;
-				cc = (Cells) oo1[0];
-				LayCells tjlayCels = new LayCells(cc);
-				retMap.put("tjlayCels", tjlayCels);
-				ArrayList<String> groupfilds = (ArrayList<String>) oo1[1];
-				ArrayList<String> sumfilds = (ArrayList<String>) oo1[2];
-				retMap.put("groupfilds", groupfilds);
-				retMap.put("groupdatafilds", sumfilds);
-				retMap.put("bcount", true);
-				retMap.put("chartType", oo1[3]);
-				isopenTjnow = true;
-			}
-		}else{
-			retMap.put("bcount", false);
-		}
-		if(cellid.length()==0){
-			retMap.put("layCels", layCells);
-		}
-		if(pdata.length()>0 && tjcell == null){
-			tjcell = c1;
-		}
-		pdata = makeSearchTj(tjcell,pdata);
-		PageLayOut pageLayOut =  new PageLayOut(currPage,pageSize,pdata);
-		if(!isopenTjnow){
-			makeValues(hss, c1,pageLayOut);
-			isopenTjnow = false;
-		}else{
-			makeCountValues(hss, cc, pageLayOut, groupStr1, sumfildstr);
-		}
-		retMap.put("pages", pageLayOut);
-		reoReturnObj.makeSuccess();
-		reoReturnObj.setData(retMap);
-		WriteJsonString(response, reoReturnObj);
-	}
 	
 	/**
 	 * 获取业务定义
@@ -883,7 +767,7 @@ public class WebServiceAPI extends HttpServlet {
 	
 	/***
 	 * 保存、删除数据
-	 * 数据内置sys_state,定义是不要创建这个字段！！！
+	 * UIRecord
 	 * @param request
 	 * @param response
 	 * @throws Exception
@@ -938,72 +822,6 @@ public class WebServiceAPI extends HttpServlet {
 		 reoReturnObj.setData(redata);
 		 WriteJsonString(response, reoReturnObj);
 	}
-	
-	/**
-	 * 获取辅助基本信息
-	 * @param request
-	 * @param response
-	 * @throws Exception 
-	 */
-	private void makeAssistInfo(HttpServletRequest request,HttpServletResponse response) throws Exception {
-		HttpSession hss = request.getSession();
-		String  dbid = request.getParameter("dbid"),userCode = request.getParameter("usercode");
-		String aid = request.getParameter("assistid"); 
-		aid = decode(aid); 
-		ReturnObj reoReturnObj = new ReturnObj();
-		HashMap<String, Object> mp = APIUtil.getdbuser(dbid, userCode);
-		APIUtil.cpTOHttpSession(mp, hss);
-		if(!checkLogin(response, hss, reoReturnObj)){
-			return ;
-		} 
-		Object o0 = universaInvoke(WebApiAidInvoke.AID_A, APIAID, null, new Object[] {aid,dbid}, false, hss);
-		if(o0 !=null){
-			reoReturnObj.makeSuccess();
-			Map<String, Object> data = new HashMap<String, Object>();
-			data.put("values", o0);
-			reoReturnObj.setData(data);
-		}else {
-			char x0 = aid.charAt(0);  
-			if(x0=='$'){//常量
-				reoReturnObj.makeFaile("不存在常量："+aid);
-			} else if(x0=='&') {//辅助
-				reoReturnObj.makeFaile("不存在辅助："+aid);
-			}
-		}
-		WriteJsonString(response, reoReturnObj);		
-	}
-	/**
-	 * 获取辅助数据
-	 * @param request
-	 * @param response
-	 * @throws Exception 
-	 */
-	private void makeAssistData(HttpServletRequest request,HttpServletResponse response) throws Exception {
-		HttpSession hss = request.getSession();
-		String  dbid = request.getParameter("dbid"),userCode = request.getParameter("usercode"),cont = request.getParameter("cont");
-		int pageSize = CCliTool.objToInt(request.getParameter("pageSize"),20);
-		int currentPage = CCliTool.objToInt(request.getParameter("page"),1);
-		String aid = request.getParameter("assistid"); 
-		aid = decode(aid);
-		cont = decode(cont);
-		ReturnObj reoReturnObj = new ReturnObj();
-		HashMap<String, Object> mp = APIUtil.getdbuser(dbid, userCode);
-		APIUtil.cpTOHttpSession(mp, hss);
-		if(!checkLogin(response, hss, reoReturnObj)){
-			return ;
-		}
-		Object o0 = universaInvoke(WebApiAidInvoke.AID_A_D, APIAID, null, new Object[] {aid,dbid,cont,pageSize,currentPage}, false, hss);
-		if(o0 !=null){
-			reoReturnObj.makeSuccess();
-			Map<String, Object> data = new HashMap<String, Object>();
-			data.put("values", o0);
-			reoReturnObj.setData(data);
-		}else {
-			reoReturnObj.makeFaile("不存在辅助："+aid);
-		}
-		WriteJsonString(response, reoReturnObj);		
-	}
-	
 
 	private void getWorkFlow(HttpServletRequest request,HttpServletResponse response) {
 		String id=request.getParameter("id");
@@ -1088,10 +906,6 @@ public class WebServiceAPI extends HttpServlet {
 
 	}
 
-	
-
-	
-	
 	/**
 	 * 组成CRecord数据，来源数据是JSON格式数据
 	 * @param cells

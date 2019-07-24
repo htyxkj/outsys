@@ -1,6 +1,3 @@
-/**
- * 
- */
 package inetbas.web.outsys.api;
 
 import inet.HVector;
@@ -153,7 +150,7 @@ public class WebApiInvoke extends DBInvoke {
 			Object clsdbs = eq.queryOne("select sbds,cid from inssyscl where sname='WB."+sbuid+"'");
 			//xh.sorg;xha.qty,xha.fcy;bar;order by sid;100|xh.sorg;xha.qty,xha.fcy;bar;order by sid;100
 			String[] grpfld = null,sumflds = null;
-			String chartType,orderby,width="";
+			String chartType,width="";
 			Object[] retuObj = null;
 			if(clsdbs!=null){
 				String[] strArr = CCliTool.objToString(clsdbs).split("\\|");

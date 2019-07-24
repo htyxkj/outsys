@@ -42,6 +42,8 @@ public class WebApiAidInvoke2 extends DBInvoke {
 	public static final int AID_I = 200;// 获取辅助基本信息
 	public static final int AID_DATA = 210;// 获取辅助数据
 	public static final int AID_CL = 300;// 获取常量数据
+	public static final int AID_CL_CWB = 360;//获取长文本信息
+	
 	public static final int AID_GDIC_UNIT = 400;// 获取商品核算单位信息
 	private static final String REDISAID = ".BipInsAidNew.";// 储存在redis中的 辅助部分标识
 	private static final String REDISAIDCL = ".BipInsAidNew.CL.";// 储存在redis中的 常量部分标识
@@ -49,6 +51,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 	
 	public static final int AID_I_UPDATE = 500;//更新redis中辅助信息
 	public static final int AID_CL_UPDATE = 600;//更新redis中常量信息
+
 	
 	public static final int AID_I_DEL = 550;//更新redis中辅助信息
 	public static final int AID_CL_DEL = 650;//更新redis中常量信息
