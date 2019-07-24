@@ -11,6 +11,8 @@ import inetbas.pub.exi.CExPubTool;
 import inetbas.serv.csys.DBInvoke;
 import inetbas.sserv.SQLExecQuery;
 import inetbas.sserv.SSTool;
+import inetbas.web.outsys.api.uidata.UICData;
+import inetbas.web.outsys.api.uidata.UIRecord;
 import inetbas.web.outsys.entity.QueryEntity;
 import inetbas.web.outsys.redis.RedisHelper;
 import inetbas.web.outsys.tools.CellsSessionUtil;
@@ -71,8 +73,10 @@ public class WebApiWorkFlowInvoke extends DBInvoke {
 	 */
 	private Object getWorkFlowDatasSub(SQLExecQuery eq, String buidto, String buidfr, QueryEntity qe) throws Exception {
 		CWorkFlow cWorkFlow = workFlowByBuidto(eq, buidto, buidfr);
+		UICData data = new UICData();
 		if (cWorkFlow != null) {
 			String pcell = cWorkFlow.getPcell();
+			data.setObj_id(data.getObj_id());
 			Object oo = CellsSessionUtil.getCellsByCellId(eq.db_id, pcell);
 			Cells cells = null;
 			if (oo == null) {
@@ -97,11 +101,14 @@ public class WebApiWorkFlowInvoke extends DBInvoke {
 				if((cells.attr & cl.ICL.ocNotDelete)==0) {
 					checkLoadData(eq, cWorkFlow, cells, sc, hv);
 				}
-				ArrayList<JSONObject> values = WebApiPageInvoke.valuesToJsonArray(hv, cells, 0, null, true);
-				qe.setValues(values);
+				
+				ArrayList<UIRecord> values = WebApiPageInvoke.valuesToJsonArray2(hv, cells, 0, null, true);
+				data.setData(values);
+//				ArrayList<JSONObject> values = WebApiPageInvoke.valuesToJsonArray2(hv, cells, 0, null, true);
+//				qe.setValues(values);
 			}
 		}
-		return qe;
+		return data;
 	}
 
 	/**
@@ -204,6 +211,7 @@ public class WebApiWorkFlowInvoke extends DBInvoke {
 
 	public Object getWorkFlowDatas(SQLExecQuery eq, String buidto, String buidfr, QueryEntity qe) throws Exception {
 		CWorkFlow cWorkFlow = workFlowByBuidto(eq, buidto,buidfr);
+		UICData cData = new UICData();
 		if(cWorkFlow != null) {
 			String pcell = cWorkFlow.getPcell();
 			Object oo = CellsSessionUtil.getCellsByCellId(eq.db_id, pcell);
@@ -222,6 +230,8 @@ public class WebApiWorkFlowInvoke extends DBInvoke {
 				tcells = cc[0];
 				tcells.condiction = SSTool.formatVarMacro(tcells.condiction, eq);
 			}
+			cData.setObj_id(cells.obj_id);
+			cData.setPage(qe.getPage());
 			if(cells!=null) {
 				String flag = cWorkFlow.getFlag();
 				String sc = "("+flag+"=0 or "+flag+" is null)";
@@ -237,13 +247,18 @@ public class WebApiWorkFlowInvoke extends DBInvoke {
 				if(totalSize>0) {
 					qe.getPage().setTotal(totalSize);
 					HVector v0 = eq.queryVec(ss.getPagingSql());
-					ArrayList<JSONObject> values = WebApiPageInvoke.valuesToJsonArray(v0,cells,0,null,true);
-					qe.setValues(values);
+					
+					
+					ArrayList<UIRecord> values = WebApiPageInvoke.valuesToJsonArray2(v0,cells,0,null,true);
+					cData.setData(values);
+					cData.setPage(qe.getPage());
+//					ArrayList<JSONObject> values = WebApiPageInvoke.valuesToJsonArray(v0,cells,0,null,true);
+//					qe.setValues(values);
 					_log.info(ss.getPagingSql());
 				}
 			}
 		}
-		return qe;
+		return cData;
 	}
 
 	@SuppressWarnings("unchecked")
