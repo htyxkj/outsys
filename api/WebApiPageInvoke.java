@@ -113,7 +113,15 @@ public class WebApiPageInvoke extends DBInvoke {
 		String st0 = null;
 		int t0;
 		long attr = cell.attr;
-		String sc = CommUtils.getContStr(querCell, qe.getCont());
+		String sc = null;
+		if(qe.oprid == 14){
+			String cont = qe.getCont(); 
+			if(cont != null && cont.length()>1){
+				sc = cont;
+			}
+		}else{
+			sc = CommUtils.getContStr(querCell, qe.getCont());
+		}
 		if (sc != null && sc.length() > 0) {
 			char c0 = sc.charAt(0);
 			if (c0 >= '0' && c0 <= '9') {
