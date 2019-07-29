@@ -6,7 +6,7 @@ package inetbas.web.outsys.entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONObject;
 
 /**
  * @author www.bip-soft.com

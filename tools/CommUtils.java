@@ -5,7 +5,7 @@ package inetbas.web.outsys.tools;
 
 import java.util.regex.Pattern;
 
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONObject;
 
 import inet.HVector;
 import inetbas.cli.cutil.CCliTool;
@@ -257,6 +257,8 @@ public class CommUtils {
 	        Pattern pattern = Pattern.compile("^-?\\d+(\\.\\d+)?$");
 	        return pattern.matcher(string).matches();
 	    }
+	   
+	  
 	   
 	
 	

@@ -12,7 +12,6 @@ import inetbas.sserv.SSTool;
 import inetbas.web.outsys.entity.PageLayOut;
 import inetbas.web.outsys.tools.CellsUtil;
 import inetbas.web.outsys.tools.ServScript;
-import inetbas.webserv.SErvVars;
 import inetbas.webserv.WAORGUSR;
 import inetbas.webserv.WebAppPara;
 
@@ -23,13 +22,16 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.fastjson.JSONObject;
+
 import cl.ICL;
 
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 
 /**
  * @author www.bip-soft.com
@@ -46,8 +48,7 @@ public class WebApiInvoke extends DBInvoke {
 
 	public static final int API_CountFLD = 301; // 取统计条件（按照菜单参数ID，常量中定义WB.菜单参数ID）
 	public static final int API_CountSbds = 302; //获取常量  根据名称获取常量公式 不做任何业务逻辑处理
-	public static final int API_DLG = 303; //获取常量中的DLG 弹出框 按钮
-	public static final int API_DLGA = 304; //获取常量中的DLG 弹出框按钮执行
+	public static final int API_DLGSQLRUN = 304; //获取常量中的DLG 弹出框按钮执行
 
 	public static final int API_InitCelInc = 100;
 	public static final int API_exportExcel = 400;
@@ -99,10 +100,7 @@ public class WebApiInvoke extends DBInvoke {
 		}else if(id == API_ASSISTTYPE){
 			String editName = CCliTool.objToString(wa.params[0]);
 			return assistType(eq,editName);
-		}else if(id == API_DLG){
-			String sname = (String)wa.params[0];
-			return getDlgButton(eq,sname);
-		}else if(id == API_DLGA){
+		}else if(id == API_DLGSQLRUN){
 			String jsonStr = (String)wa.params[0];
 			String btnInfo = (String)wa.params[1];
 			return runDLGA(eq,jsonStr,btnInfo);
@@ -200,29 +198,10 @@ public class WebApiInvoke extends DBInvoke {
 				return clsdbs;
 			} 
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
-	}
-	/**
-	 * 获取弹出框按钮
-	 * @param eq
-	 * @param sname
-	 * @return
-	 */
-	private Object getDlgButton(SQLExecQuery eq, String sname){
-		try {
-			String sql = "select sbds from inssyscl where sname='"+sname+"'";
-			HVector hv = eq.queryVec(sql);
-			if(hv!=null){
-				return hv;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+	} 
 
 	/**
 	 * 执行弹出框按钮
@@ -231,10 +210,11 @@ public class WebApiInvoke extends DBInvoke {
 	 * @return
 	 */
 	private Object runDLGA(SQLExecQuery eq, String jsonstr,String btnInfo){
+		Map<String, String> ret = new HashMap<String, String>();
 		try {
-			JSONObject str = JSONObject.parseObject(decode(jsonstr));
-			JSONObject btn = JSONObject.parseObject(decode(btnInfo)); 
-			String sqlSel = "select sbds from inssyscl where sname='"+btn.getString("menuid")+"' and sbds like 'A:"+btn.getString("name")+"%'";
+			JSONObject str = JSONObject.parseObject(jsonstr);
+			JSONObject btn = JSONObject.parseObject(btnInfo); 
+			String sqlSel = "select sbds from inssyscl where sname='"+btn.getString("dlgSname")+"' and sbds like 'A:"+btn.getString("name")+"%'";
 			String sbds = CCliTool.objToString(eq.queryOne(sqlSel));
 			String[] strArr = sbds.split(";");
 			String upsql = strArr[2];
@@ -252,11 +232,24 @@ public class WebApiInvoke extends DBInvoke {
 				String val = str.getString(key);
 				upsql = upsql.replace("@"+key, "'"+val+"'");
 			}
-			int num = eq.exec(upsql);
-			return num;
+			int num = eq.exec(upsql); 
+			
+			String msg0 = strArr[3];
+			String msg1 = strArr[4];
+			String v = num+"";
+			if(msg0.startsWith(v)){
+				String[] cc = msg0.split(":");
+				ret.put("msg", cc[1]);
+				ret.put("state", "0");
+			}else {
+				String[] cc = msg1.split(":");
+				ret.put("msg", cc[1]);
+				ret.put("state", "1");
+			} 
+			return ret;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return -1;
+			return ret;
 		}
 	}
 	
@@ -294,7 +287,7 @@ public class WebApiInvoke extends DBInvoke {
 //			s0 = s1;
 		}
 		cc.initValue = s0;
-		CCliTool.inc_Init(cell, cc); // 自增关联
+//		CCliTool.inc_Init(cell, cc); // 自增关联
 		s1 = s0 = cc.initValue;
 		t0 = cell.autoInc;
 		t1 = cc.index + 1;
@@ -846,17 +839,5 @@ public class WebApiInvoke extends DBInvoke {
 			str[1] = script; 
 		} 
 		return str;
-	}
-
-	public static String decode(String s0) {
-		 String sch = SErvVars.CHARSET; /*"8859_1"*/
-		 if (sch == null || sch.length() < 2)
-		  return s0;
-		 //;--处理如TOMCAT5是以8859_1方式硬编码时，还原成系统传输的UTF-8编码。
-		 try {
-		  return new String(s0.getBytes(sch), cl.INN.UTF_8);
-		 } catch (Exception err) {
-		 }
-		 return s0;
-		}
+	} 
 }

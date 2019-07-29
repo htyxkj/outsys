@@ -79,6 +79,7 @@ public class WebServiceAPI extends HttpServlet {
 	public static final String APIAID2 = "inetbas.web.outsys.api.WebApiAidInvoke2";//辅助、常量、自定义sql、变量查询服务
 	public static final String APIWorkFlow = "inetbas.web.outsys.api.WebApiWorkFlowInvoke";//工作流
 	public static final String APIPage = "inetbas.web.outsys.api.WebApiPageInvoke";//工作流
+	public static final String APIRPT = "inetbas.web.outsys.api.WebApiRptInvoke";//RPT
 	public static final String UTF8 = "utf-8";
 	public static final String BIKey="sitande@2017";
 	public void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -126,8 +127,14 @@ public class WebServiceAPI extends HttpServlet {
 		  } else if(APIConst.APIID_BIPINSAID.equals(apiStr)) {
 			  getBipInsAidInfo(request, response);
 		  }else if(APIConst.APIID_TA_MSG.equals(apiStr)){//任务消息操作
-				taskAndIM(request, response);
-		}
+			  taskAndIM(request, response);
+		  }else if(APIConst.APIID_DLGSQLRUN.equals(apiStr)){//自定义按钮执行SQL
+			  dlgSqlRun(request, response);
+		  }else if(APIConst.APIID_DLGCELLRUN.equals(apiStr)){//自定义按钮对象保存
+			  
+		  }else if(APIConst.APIID_RPT.equals(apiStr)) {
+			  rptInfo(request, response);
+		  }
 		else{
 			error.setMessage("错误的请求："+apiStr);
 			WriteJsonString(response, error);
@@ -138,6 +145,35 @@ public class WebServiceAPI extends HttpServlet {
 		}  
 	} 
 	
+	/**
+	 * @param request
+	 * @param response
+	 * 2019-07-25 17:33:31
+	 */
+	private void rptInfo(HttpServletRequest request, HttpServletResponse response) {
+		String dbid = request.getParameter("dbid"), userCode = request
+				.getParameter("usercode"),id = request.getParameter("id");
+		HttpSession hss = request.getSession();
+		HashMap<String, Object> mp = APIUtil.getdbuser(dbid, userCode);
+		APIUtil.cpTOHttpSession(mp, hss);
+		ReturnObj reoReturnObj = new ReturnObj();
+		int rid = CCliTool.objToInt(id, 200);
+		Object o0 = null;
+		if(!checkLogin(response, hss, reoReturnObj))
+			return ;
+		try {
+			String qeString = decode(request.getParameter("qe"));
+			_log.info(qeString);
+			QueryEntity qe = JSON.parseObject(qeString, QueryEntity.class);
+			o0 =  universaInvoke(rid, APIRPT, null, new Object[]{qe}, false, hss);
+			HashMap<String, Object> mp1 = new HashMap<String, Object>();
+			mp1.put("rpt", o0);
+			reoReturnObj.setData(mp1);
+			WriteJsonString(response, o0);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	/**
 	 * WEB端登录，需要用户名，密码
 	 * @param request 参数有dbid(账套编码),usercode(用户编码),username(用户名称)
@@ -937,7 +973,12 @@ public class WebServiceAPI extends HttpServlet {
 		}
 		return cr;
 	}
-
+	/**
+	 * 组成子表数据
+	 * @param cells
+	 * @param cr
+	 * @param cc
+	 */
 	private void makeSubData(Cells cells, CRecord cr, List<UICData> cc) {
 		for(int j=0;j<cc.size();j++){
 			UICData uicd = cc.get(j);
@@ -1651,6 +1692,43 @@ public class WebServiceAPI extends HttpServlet {
 			WriteJsonString(response, reoReturnObj);
 		}
 	}
+	
+	private void dlgSqlRun(HttpServletRequest request, HttpServletResponse response){
+		ReturnObj reoReturnObj = new ReturnObj();
+		try {
+			String userCode = request.getParameter("usercode");
+			String dbid = request.getParameter("dbid");
+			HashMap<String, Object> mp = APIUtil.getdbuser(dbid, userCode);
+			HttpSession hss = request.getSession();
+			APIUtil.cpTOHttpSession(mp, hss);
+			if(!checkLogin(response, hss, reoReturnObj)){
+				return;
+			}
+			String jsonstr = request.getParameter("value");
+			jsonstr = decode(jsonstr);
+			String btnInfo = request.getParameter("btn"); 
+			btnInfo = decode(btnInfo);
+			
+			Object o0 =  universaInvoke(WebApiInvoke.API_DLGSQLRUN,APIIV, null, new Object[]{jsonstr,btnInfo}, false, hss);
+			Map<String, String> mp1 = (Map<String, String>) o0;
+			String state = mp1.get("state");
+			if(state != null){
+				if(state.equals("0")){
+					reoReturnObj.makeFaile(mp1.get("msg"));
+				}else if(state.equals("1")){
+					reoReturnObj.makeSuccess(mp1.get("msg"));
+				}
+			}else{
+				reoReturnObj.makeFaile("操作失败！");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			reoReturnObj.makeFaile("系统故障！");
+		}finally{
+			WriteJsonString(response, reoReturnObj);
+		}
+	}
+	
 	
 	/***
 	 * 检测用户是否已经登陆

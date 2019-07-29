@@ -45,9 +45,12 @@ public class APIConst {
 	public static final int JSONDATA = 1;//保存Json格式数据提交
 	
 	public static final String APIID_WORKFLOW = "workflow";//工作流
-	public static final String APIID_DLG = "dlg";//对象弹出框按钮查询
-	public static final String APIID_DLGA = "dlga";//对象弹出框按钮执行
+	
+	public static final String APIID_DLGSQLRUN = "dlgsqlrun" ;//弹出框执行sql 
+	public static final String APIID_DLGCELLRUN = "dlgacellrun";//弹出对象按钮执行
 
+	
+	public static final String APIID_RPT = "rpt";//RPT
 	
 	//审批提交
 	public static final String APIID_CHKUP = "chkup";

@@ -18,6 +18,7 @@ import inetbas.web.outsys.redis.RedisHelper;
 import inetbas.web.outsys.tools.CellsSessionUtil;
 import inetbas.web.outsys.tools.CellsUtil;
 import inetbas.web.outsys.tools.CommUtils;
+import inetbas.web.outsys.tools.DataTools;
 import inetbas.web.outsys.tools.SQLInfoE;
 import inetbas.web.outsys.tools.SQLUtils;
 import inetbas.web.outsys.uiparam.CWorkCopy;
@@ -102,7 +103,7 @@ public class WebApiWorkFlowInvoke extends DBInvoke {
 					checkLoadData(eq, cWorkFlow, cells, sc, hv);
 				}
 				
-				ArrayList<UIRecord> values = WebApiPageInvoke.valuesToJsonArray2(hv, cells, 0, null, true);
+				ArrayList<UIRecord> values = DataTools.valuesToJsonArray2(hv, cells, 0, null, true);
 				data.setData(values);
 //				ArrayList<JSONObject> values = WebApiPageInvoke.valuesToJsonArray2(hv, cells, 0, null, true);
 //				qe.setValues(values);
@@ -249,7 +250,7 @@ public class WebApiWorkFlowInvoke extends DBInvoke {
 					HVector v0 = eq.queryVec(ss.getPagingSql());
 					
 					
-					ArrayList<UIRecord> values = WebApiPageInvoke.valuesToJsonArray2(v0,cells,0,null,true);
+					ArrayList<UIRecord> values = DataTools.valuesToJsonArray2(v0,cells,0,null,true);
 					cData.setData(values);
 					cData.setPage(qe.getPage());
 //					ArrayList<JSONObject> values = WebApiPageInvoke.valuesToJsonArray(v0,cells,0,null,true);

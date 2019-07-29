@@ -20,28 +20,22 @@ public class SQLUtils {
 	public static SQLInfoE makeSqlInfo(String sql0,QueryEntity qe,int dbType) {
 		SQLInfoE sqlInfoE = new SQLInfoE(sql0,dbType);
 		String sqlform = sql0.substring(sql0.indexOf("from"));
-//		int _where = sqlform.indexOf(" where");
-//		if(_where>0) {
-//			String where = sqlform.substring(_where).trim();
-//			sqlInfoE.setWhereCont(where);
-//			sqlform = sqlform.substring(0,_where).trim();
-//		}
 		sqlInfoE.setSqlfrom(sqlform);
 		String sqlfilds = sql0.substring(sql0.indexOf(" "),sql0.indexOf("from")).trim();
-		HVector hh = spliteSqlFiled(sqlfilds);
-		ArrayList<SQLFiledInfo> arrayList = new ArrayList<SQLFiledInfo>();
-		for(int i=0;i<hh.size();i++) {
-			SQLFiledInfo filedInfo = new SQLFiledInfo(hh.elementAt(i).toString(), i);
-			arrayList.add(filedInfo);
+		HVector hh = getSqlSelectFled(sqlfilds);
+		if(hh!=null) {
+			ArrayList<SQLFiledInfo> arrayList = new ArrayList<SQLFiledInfo>();
+			for(int i=0;i<hh.size();i++) {
+				SQLFiledInfo filedInfo = new SQLFiledInfo(hh.elementAt(i).toString(), i);
+				arrayList.add(filedInfo);
+			}
+			sqlInfoE.setFiledInfos(arrayList);
+			makeOrderByAndGroupBy(sqlInfoE, qe);
+			sqlInfoE.makeTotal();
+			int startNum = 0;
+			startNum = qe.getPage().getPageSize() * (qe.getPage().getCurrPage() - 1);
+			sqlInfoE.makeSelectPage(startNum,qe.getPage().getPageSize());
 		}
-//		String cont = qe.getCont();
-//		cont = cont ==null?"":cont.trim();
-		sqlInfoE.setFiledInfos(arrayList);
-		makeOrderByAndGroupBy(sqlInfoE, qe);
-		sqlInfoE.makeTotal();
-		int startNum = 0;
-		startNum = qe.getPage().getPageSize() * (qe.getPage().getCurrPage() - 1);
-		sqlInfoE.makeSelectPage(startNum,qe.getPage().getPageSize());
 		return sqlInfoE;
 	}
 	
@@ -114,49 +108,15 @@ public class SQLUtils {
 		return revalue;
 	}
 	
-	public static HVector spliteSqlFiled(String str) {
-		HVector hh = new HVector();
-		String sqlfilds = str;
-		int i = sqlfilds.indexOf(",");
-		while (i>=0) {
-			String s1 = sqlfilds.substring(0,i);
-			int k = s1.indexOf("(");
-			if(k>=0) {
-				int n = CCliTool.nextBarcket(sqlfilds.toCharArray(), k, sqlfilds.length(), '(');//查找匹配的括号
-				if(n>i) {
-					i = sqlfilds.indexOf(',', i+1);
-					if(i>=0) {
-						s1 = sqlfilds.substring(0,i);
-					}
-				}
-			}
-			sqlfilds = sqlfilds.substring(i+1);
-			hh.addElement(s1.trim());
-			i = sqlfilds.indexOf(",");	
-		}
-		hh.addElement(sqlfilds.trim());
-		return hh;
-	}
 	
-//	public static void main(String[] args) {
-////		String bb = "ht.cdic,'1111',123,ht.sorg,ht.sopr,ht.htlx,hta.gdic," + 
-////				" sum(hta.usd),sum(hta.qtyhs),sum(hta.qty),sum(hta.qtybk),sum(hta.fcy),sum(hta.addtax),sum(hta.rmbhs))" + 
-////				" ,ht.cdic,ht.sorg,ht.sopr,ht.htlx,hta.gdic,sum(hta.usd),sum(hta.qtyhs),sum(hta.qty),sum(hta.qtybk)," + 
-////				"  sum(hta.fcy),sum(hta.addtax),sum(hta.rmbhs) ";
-////		HVector hh = spliteSqlFiled(bb);
-////		for(int i=0;i<hh.size();i++) {
-////			System.out.println(hh.elementAt(i));
-////		}
-//		String sql="select cdic,sbuid,sopr,sum(fcy) from ht where sbuid='2111' group by cdic,sbuid,sopr order by cdic";
-//		String sql0 = "select ht.cdic,ht.sorg,ht.sopr,ht.htlx,hta.gdic,sum(hta.usd),sum(hta.qtyhs),sum(hta.qty),sum(hta.qtybk),sum(hta.fcy),sum(hta.addtax),sum(hta.rmbhs) from hta,ht where ht.sid>='0' and ht.hpdate>='2018-05-07' and ht.hpdate<'2019-05-08' and ht.sid=hta.sid and ht.c_corp=hta.c_corp and ht.sbuid='2111' and ht.sorg like '0%' group by ht.cdic,ht.sorg,ht.sopr,ht.htlx,hta.gdic order by ht.cdic";
-//		QueryEntity qEntity = new QueryEntity();
-//		PageInfo pg = new PageInfo();
-//		pg.setCurrPage(1);
-//		pg.setPageSize(10);
-//		qEntity.setPage(pg);
-//		SQLInfoE ss = makeSqlInfo(sql0,qEntity,ICL.MSSQL);
-//		System.out.println(ss.getTotalSql());
-//		System.out.println(ss.getPagingSql());
-//		
-//	}
+
+	/**
+	 * @param sql
+	 * @return
+	 * 2019-07-29 14:45:25
+	 */
+	public static HVector getSqlSelectFled(String sql) {
+		return CCliTool.divide(sql, ',', true);
+	}
+
 }
