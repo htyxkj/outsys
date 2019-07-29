@@ -28,9 +28,9 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.fastjson.JSONObject;
-
 import cl.ICL;
+
+import com.alibaba.fastjson.JSONObject;
 
 
 /**
@@ -216,6 +216,8 @@ public class WebApiInvoke extends DBInvoke {
 			JSONObject btn = JSONObject.parseObject(btnInfo); 
 			String sqlSel = "select sbds from inssyscl where sname='"+btn.getString("dlgSname")+"' and sbds like 'A:"+btn.getString("name")+"%'";
 			String sbds = CCliTool.objToString(eq.queryOne(sqlSel));
+			if(sbds.lastIndexOf("&") == sbds.length()-1)
+				sbds = sbds.substring(0,sbds.length()-1);
 			String[] strArr = sbds.split(";");
 			String upsql = strArr[2];
 			while (upsql.indexOf("@") !=-1) { 

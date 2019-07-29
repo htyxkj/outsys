@@ -114,33 +114,35 @@ public class WebApiAidInvoke2 extends DBInvoke {
 			} else {
 				// 从数据库根据常量ID获取信息
 				String cl = SSTool.loadConst1(eq, clid);
-				bipInsAid = new BipInsAidNew();
-				bipInsAid.setSlink(cl);
-				bipInsAid.setCl(true);
-				HVector hh = null;
-				if (cl.startsWith("{")) {
-					cl = cl.substring(1, cl.length() - 1);
-					hh = CCliTool.divide(cl, ';');
-					if (hh != null) {
-						ArrayList<JSONObject> list = getFlagsList(hh);
-						// 给FlagEditor赋值
-						bipInsAid.setValues(list);
-						// 设置total值
-						bipInsAid.setTotal(list.size());
-						bipInsAid = getFlagCells(bipInsAid);
-					}
-				} else if (cl.startsWith("select")) {
-					cl = SSTool.formatVarMacro(cl,eq);
-					_log.info(cl);
-					hh = eq.queryVec(cl, true, 100);
-					if (hh != null) {
-						Cell[] cells = (Cell[]) hh.elementAt(0);
-						Cells cells2 = new Cells(clid);
-						cells2.setCCells(cells);
-						LayCells cells3 = new LayCells(cells2);
-						bipInsAid.setCells(cells3);
-						ArrayList<JSONObject> list = hvectorToArray(hh, cells3.cels, 1);
-						bipInsAid.setValues(list);
+				if(cl != null){
+					bipInsAid = new BipInsAidNew();
+					bipInsAid.setSlink(cl);
+					bipInsAid.setCl(true);
+					HVector hh = null;
+					if (cl.startsWith("{")) {
+						cl = cl.substring(1, cl.length() - 1);
+						hh = CCliTool.divide(cl, ';');
+						if (hh != null) {
+							ArrayList<JSONObject> list = getFlagsList(hh);
+							// 给FlagEditor赋值
+							bipInsAid.setValues(list);
+							// 设置total值
+							bipInsAid.setTotal(list.size());
+							bipInsAid = getFlagCells(bipInsAid);
+						}
+					} else if (cl.startsWith("select")) {
+						cl = SSTool.formatVarMacro(cl,eq);
+						_log.info(cl);
+						hh = eq.queryVec(cl, true, 100);
+						if (hh != null) {
+							Cell[] cells = (Cell[]) hh.elementAt(0);
+							Cells cells2 = new Cells(clid);
+							cells2.setCCells(cells);
+							LayCells cells3 = new LayCells(cells2);
+							bipInsAid.setCells(cells3);
+							ArrayList<JSONObject> list = hvectorToArray(hh, cells3.cels, 1);
+							bipInsAid.setValues(list);
+						}
 					}
 				}
 			}
