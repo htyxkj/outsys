@@ -130,7 +130,12 @@ public class DataTools {
 		for(int i=0;i<cells.length;i++) {
 			Cell cell = cells[i];
 			int type = cell.ccType;
-			Object ov = vl[i];
+			Object ov = null;
+			if(i<vl.length) {
+				ov = vl[i];
+			}else {
+				ov = "";
+			}
 			if(type==91||type ==93 || ov instanceof Timestamp ) {
 				String vv = CCliTool.dateToString(ov, true, type==93?8:cl.ICL.DF_YMD);
 				json.put(cell.ccName, vv);

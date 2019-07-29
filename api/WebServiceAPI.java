@@ -1693,6 +1693,7 @@ public class WebServiceAPI extends HttpServlet {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void dlgSqlRun(HttpServletRequest request, HttpServletResponse response){
 		ReturnObj reoReturnObj = new ReturnObj();
 		try {
@@ -1710,6 +1711,7 @@ public class WebServiceAPI extends HttpServlet {
 			btnInfo = decode(btnInfo);
 			
 			Object o0 =  universaInvoke(WebApiInvoke.API_DLGSQLRUN,APIIV, null, new Object[]{jsonstr,btnInfo}, false, hss);
+			
 			Map<String, String> mp1 = (Map<String, String>) o0;
 			String state = mp1.get("state");
 			if(state != null){
