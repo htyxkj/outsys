@@ -129,6 +129,8 @@ public class DataTools {
 		JSONObject json = new JSONObject();
 		for(int i=0;i<cells.length;i++) {
 			Cell cell = cells[i];
+			if(cell == null) 
+				continue;
 			int type = cell.ccType;
 			Object ov = null;
 			if(i<vl.length) {

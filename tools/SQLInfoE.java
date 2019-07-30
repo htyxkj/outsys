@@ -131,7 +131,8 @@ public class SQLInfoE implements Serializable{
 		if(groupBy!=null&&groupBy.length()>0) {
 			totalSql = "select count(*) from (select "+filed1+" " + sqlfrom+" "+groupBy+") b";
 		}else {
-			totalSql = "select count("+filed1+") " + sqlfrom;
+//			totalSql = "select count("+filed1+") " + sqlfrom;
+			totalSql = "select count(*) " + sqlfrom;
 		}
 	}
 	

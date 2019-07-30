@@ -23,10 +23,16 @@ public class SQLFiledInfo implements Serializable{
 	}
 	
 	private void initFiled() {
-		String[] s1 = filed.split(" ");
-		String s10 = s1[0];
-		if(s10.startsWith("sum(")) {
+		String s10 = "";
+		if(filed.startsWith("'")){
+			s10 = filed; 
 			bsum = true;
+		}else{
+			String[] s1 = filed.split(" ");
+			s10 = s1[0];
+			if(s10.startsWith("sum(")) {
+				bsum = true;
+			}
 		}
 		filedIn = s10;
 		filedNew = "f"+index;

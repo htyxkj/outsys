@@ -9,6 +9,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +61,10 @@ public class WebApiRptInvoke extends DBInvoke {
 				WebServeCRef osv = new WebServeCRef(cc,eq);
 				sql = SSTool.formatVarMacro(sql, eq, osv);
 				SQLInfoE ss = SQLUtils.makeSqlInfo(sql, qe, eq.db_type);
+				ExecutorService executor = Executors.newCachedThreadPool();//添加处理完工逻辑
+				RPTCallable callable = new RPTCallable(eq.db_id, vd, eq.getVars(), osv,cellid);
+				executor.submit(callable);
+				executor.shutdown();
 				String totalSQL = ss.getTotalSql();
 				_log.info(totalSQL);
 				int total = CCliTool.objToInt(eq.queryOne(totalSQL),0);

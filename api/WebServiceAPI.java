@@ -169,7 +169,8 @@ public class WebServiceAPI extends HttpServlet {
 			HashMap<String, Object> mp1 = new HashMap<String, Object>();
 			mp1.put("rpt", o0);
 			reoReturnObj.setData(mp1);
-			WriteJsonString(response, o0);
+			reoReturnObj.makeSuccess();
+			WriteJsonString(response, reoReturnObj);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
