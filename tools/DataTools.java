@@ -3,14 +3,6 @@
  */
 package inetbas.web.outsys.tools;
 
-import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-
 import inet.HVector;
 import inetbas.cli.cutil.CCliTool;
 import inetbas.pub.coob.CData;
@@ -19,6 +11,14 @@ import inetbas.pub.coob.Cell;
 import inetbas.pub.coob.Cells;
 import inetbas.web.outsys.api.uidata.UICData;
 import inetbas.web.outsys.api.uidata.UIRecord;
+
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 
 /**
  * @author www.bip-soft.com
@@ -59,22 +59,25 @@ public class DataTools {
 	 */
 	public static ArrayList<UIRecord> valuesToJsonArray2(HVector v0, Cells cell,long attr,String extb,boolean report) {
 		ArrayList<UIRecord> arrayList = new ArrayList<UIRecord>();
-		if(report) {
-			for(int i=0;i<v0.size();i++) {
-				Object[] v1 = (Object[]) v0.elementAt(i);
-				UIRecord jsonObject = makeValuesToUIRecord(v1, cell.db_cels);
-				arrayList.add(jsonObject);
-			}
-			return arrayList;
-		}
+//		if(report) {
+//			for(int i=0;i<v0.size();i++) {
+//				Object[] v1 = (Object[]) v0.elementAt(i);
+//				UIRecord jsonObject = makeValuesToUIRecord(v1, cell.db_cels);
+//				arrayList.add(jsonObject);
+//			}
+//			return arrayList;
+//		}
 		boolean b2 = extb != null && extb.length() > 0;
 		String s0 = cell.toSQLString(false, attr, false, false, true, b2);
 		HVector hv = SQLUtils.getSqlSelectFled(s0);
-		String[] flds = new String[hv.size()];
-		for (int i = 0; i < hv.size(); i++) {
-			flds[i] = CCliTool.objToString(hv.elementAt(i));
+		Cell[] cc = cell.db_cels;
+		if(!report) {
+			String[] flds = new String[hv.size()];
+			for (int i = 0; i < hv.size(); i++) {
+				flds[i] = CCliTool.objToString(hv.elementAt(i));
+			}
+			cc = cell.getCCells(CCliTool.toIndexs(cell, flds, 0));
 		}
-		Cell[] cc = cell.getCCells(CCliTool.toIndexs(cell, flds, 0));
 		for(int i=0;i<v0.size();i++) {
 			Object o1 = v0.elementAt(i);
 			if(o1==null) {

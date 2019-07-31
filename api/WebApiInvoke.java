@@ -83,6 +83,7 @@ public class WebApiInvoke extends DBInvoke {
 			Cells cell = (Cells)wa.params[0];
 			for (int i = 0; i < cell.db_cels.length; i++) {
 				Cell cc = cell.db_cels[i];
+				cc.index = i;
 				if ((cc.attr & Cell.AUTOINC) != 0) {
 					InitCellAutoInc(cell, cc);
 				}
@@ -234,6 +235,7 @@ public class WebApiInvoke extends DBInvoke {
 				String val = str.getString(key);
 				upsql = upsql.replace("@"+key, "'"+val+"'");
 			}
+			upsql = SSTool.formatVarMacro(upsql, eq);
 			int num = eq.exec(upsql); 
 			
 			String msg0 = strArr[3];
@@ -319,6 +321,12 @@ public class WebApiInvoke extends DBInvoke {
 				y = y%100;
 				String mon = m<10?("0"+m):m+"";
 				s0 = s0.replaceAll("\\[Y2M\\]",y+mon);
+			}
+			if(s0.indexOf("[Y2MD]")>0){
+				y = y%100;
+				String mon = m<10?("0"+m):m+"";
+				String dSt = day<10?"0"+day:day+"";
+				s0 = s0.replaceAll("\\[Y2MD\\]",y+mon+dSt);
 			}
 			if(s0.indexOf("[YM]")>0){
 				String mon = m<10?("0"+m):m+"";

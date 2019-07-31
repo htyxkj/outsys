@@ -820,7 +820,9 @@ public class WebServiceAPI extends HttpServlet {
 		ReturnObj reoReturnObj = new ReturnObj();
 		if(!checkLogin(response, hss, reoReturnObj))
 			return ;
+		
 		Cells cells = (Cells) getCellsBypcell(pcell, hss);
+		 
 		CellsUtil.initCells(cells);
 		cells = (Cells)universaInvoke(WebApiInvoke.API_InitCelInc, APIIV, null, new Object[]{cells}, false, hss);
 		CRecord cr = new CRecord(0);
