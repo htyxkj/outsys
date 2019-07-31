@@ -289,7 +289,7 @@ public class WebApiInvoke extends DBInvoke {
 //			s0 = s1;
 		}
 		cc.initValue = s0;
-//		CCliTool.inc_Init(cell, cc); // 自增关联
+		CCliTool.inc_Init(cell, cc); // 自增关联
 		s1 = s0 = cc.initValue;
 		t0 = cell.autoInc;
 		t1 = cc.index + 1;
