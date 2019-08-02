@@ -3,17 +3,6 @@
  */
 package inetbas.web.outsys.api;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
 import inet.HVector;
 import inet.ReadLine;
 import inetbas.cli.cutil.CCliTool;
@@ -32,6 +21,16 @@ import inetbas.web.outsys.tools.DataTools;
 import inetbas.web.outsys.tools.SQLInfoE;
 import inetbas.web.outsys.tools.SQLUtils;
 import inetbas.webserv.WebAppPara;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author www.bip-soft.com
@@ -55,7 +54,7 @@ public class WebApiRptInvoke extends DBInvoke {
 			Cells celltj = SSTool.readCCell(eq, qe.getTcell(), false);
 			//获取查询条件，并将json格式的数据转CRecord记录
 			CRecord cRecord = DataTools.makeCRecordByJsonStr(celltj,qe.getCont());
-			HVector vd = getRPTInfo(eq,cell,true);//根据对象标识获取RPT定义
+			HVector vd = getRPTInfo(eq,cell,qe.getType() ==2);//根据对象标识获取RPT定义
 			UICData data = new UICData(cellid);//返回的数据集
 			if(vd.size()>0) {
 				CRptItem item = (CRptItem)vd.elementAt(0);//RPT报表中的第一个定义，目前只处理第一个，其他的不处理

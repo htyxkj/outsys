@@ -3,6 +3,9 @@
  */
 package inetbas.web.outsys.tools;
 
+import inet.HVector;
+import inetbas.cli.cutil.CCliTool;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -129,7 +132,21 @@ public class SQLInfoE implements Serializable{
 	public void makeTotal() {
 		String filed1 = getFirstFiled();
 		if(groupBy!=null&&groupBy.length()>0) {
-			totalSql = "select count(*) from (select "+filed1+" " + sqlfrom+" "+groupBy+") b";
+			String count = groupBy.replace("group by", "");
+			HVector hh = CCliTool.divide(count, ',', true);
+			String sel = "";
+			for (int i = 0; i < hh.size(); i++) {
+				String cc = hh.elementAt(i)+"";
+				if(cc.indexOf(")") !=-1){
+					cc = hh.elementAt(i) + " as hh"+i+" ";
+				}
+				if(i == hh.size()-1){ 
+					sel += cc;
+				}else{
+					sel += cc+",";
+				}
+			}
+			totalSql = "select count(*) from (select "+sel + sqlfrom+" "+groupBy+") b";
 		}else {
 //			totalSql = "select count("+filed1+") " + sqlfrom;
 			totalSql = "select count(*) " + sqlfrom;
@@ -177,7 +194,5 @@ public class SQLInfoE implements Serializable{
 	}
 	public void setWhereCont(String whereCont) {
 		this.whereCont = whereCont;
-	}
-	
-
+	} 
 }

@@ -1,4 +1,4 @@
-/**
+ /**
  * 
  */
 package inetbas.web.outsys.entity;
@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 
 import cl.ICL;
+
+import com.alibaba.fastjson.JSONObject;
 
 /**
  * @author www.bip-soft.com
@@ -33,12 +35,9 @@ public class MenuParams implements Serializable {
 	private boolean beBill=true; //单据类型，true是单据，false是报表
 	
 	private String pclass=""; //小程序
-	
-	//初始化统计取数
-	private boolean bgroup=false;//是否是显示图表
-	private ArrayList<String> groupfilds;//分组字段
-	private ArrayList<String> sumfilds ;//合计字段
-	private String ctype;//图表类型 
+	//初始化图表集合
+	private boolean bgroup = false;
+	private ArrayList<JSONObject> bgroupList= new ArrayList<JSONObject>();
 	
 	public MenuParams(){}
 	
@@ -176,44 +175,28 @@ public class MenuParams implements Serializable {
 		this.pclass = pclass;
 	}
 
-	public boolean isBgroup() {
-		return bgroup;
-	}
-
-	public void setBgroup(boolean bgroup) {
-		this.bgroup = bgroup;
-	}
-
-	public ArrayList<String> getGroupfilds() {
-		return groupfilds;
-	}
-
-	public void setGroupfilds(ArrayList<String> groupfilds) {
-		this.groupfilds = groupfilds;
-	}
-
-	public ArrayList<String> getSumfilds() {
-		return sumfilds;
-	}
-
-	public void setSumfilds(ArrayList<String> sumfilds) {
-		this.sumfilds = sumfilds;
-	}
-
-	public String getCtype() {
-		return ctype;
-	}
-
-	public void setCtype(String ctype) {
-		this.ctype = ctype;
-	}
-
 	public String getWidth() {
 		return width;
 	}
 
 	public void setWidth(String width) {
 		this.width = width;
+	}
+
+	public ArrayList<JSONObject> getBgroupList() {
+		return bgroupList;
+	}
+
+	public void setBgroupList(ArrayList<JSONObject> bgroupList) {
+		this.bgroupList = bgroupList;
+	}
+
+	public boolean isBgroup() {
+		return bgroup;
+	}
+
+	public void setBgroup(boolean bgroup) {
+		this.bgroup = bgroup;
 	} 
 	
 }

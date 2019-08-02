@@ -28,8 +28,17 @@ public class SQLFiledInfo implements Serializable{
 			s10 = filed; 
 			bsum = true;
 		}else{
-			String[] s1 = filed.split(" ");
-			s10 = s1[0];
+			int kh = filed.lastIndexOf(")");
+			if(kh == -1){
+				String[] s1 = filed.split(" as ");
+				if(s1.length ==1){
+					s1 = filed.split(" ");
+				}
+				s10 = s1[0];
+			}else{
+				s10 = filed.substring(0,kh+1);
+			} 
+			
 			if(s10.startsWith("sum(")) {
 				bsum = true;
 			}

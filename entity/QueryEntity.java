@@ -20,7 +20,7 @@ public class QueryEntity implements Serializable {
 	private String orderBy;//排序
 	private String groupV;//分组字段的值
 	private PageInfo page = new PageInfo();//页码
-	private int type=1;//类型，是单据还是报表
+	private int type=1;//类型，是0：单据还:1：报表2:RPT,3:外部SQL
 	public int oprid = 13;//13查询数据，14，根据主键查询,查询一条记录（包含主子）,
 	private ArrayList<JSONObject> values;//返回数据（有可能只是列表数据）
 	public String getPcell() {

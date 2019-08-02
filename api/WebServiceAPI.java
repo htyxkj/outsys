@@ -78,7 +78,7 @@ public class WebServiceAPI extends HttpServlet {
 	public static final String APIRQ = "inetbas.web.outsys.api.WebRabbitMQInvoke";//RabbitMQ
 	public static final String APIAID2 = "inetbas.web.outsys.api.WebApiAidInvoke2";//辅助、常量、自定义sql、变量查询服务
 	public static final String APIWorkFlow = "inetbas.web.outsys.api.WebApiWorkFlowInvoke";//工作流
-	public static final String APIPage = "inetbas.web.outsys.api.WebApiPageInvoke";//工作流
+	public static final String APIPage = "inetbas.web.outsys.api.WebApiPageInvoke";//分页查询数据
 	public static final String APIRPT = "inetbas.web.outsys.api.WebApiRptInvoke";//RPT
 	public static final String UTF8 = "utf-8";
 	public static final String BIKey="sitande@2017";
@@ -650,37 +650,32 @@ public class WebServiceAPI extends HttpServlet {
 		mparam.setPbuid(buid);
 		reoReturnObj.makeSuccess();
 		HashMap<String, Object> retMap = new HashMap<String, Object>();
-		Object[] obj = null;
 		
 		if(!mparam.isBeBill()&&buid!=null){
 			Object o0 = makeCountFLD(hss, buid);
 			if(o0!=null){
-				//grplist,sumArrayList,chartType,orderby,width
 				Object[] o11 = (Object[]) o0;
-				obj = new Object[o11.length];
+				JSONObject json = new JSONObject();
+				ArrayList<JSONObject> bgroup = new ArrayList<JSONObject>();
 				for (int i = 0; i < o11.length; i++) {
-					MenuParams mparam0 = new MenuParams(); 
-					mparam0.initParams(hts);
-					mparam0.setBeBill(isbill);
-					mparam0.setPbuid(buid);
+					json = new JSONObject();
 					Object[] oo1 = (Object[]) o11[i]; 
-					ArrayList<String> groupfilds = (ArrayList<String>) oo1[0];
-					ArrayList<String> sumfilds = (ArrayList<String>) oo1[1];
-					String ctype = CCliTool.objToString(oo1[2]); 
-					String width = CCliTool.objToString(oo1[3]);
-					mparam0.setBgroup(true);
-					mparam0.setCtype(ctype);
-					mparam0.setGroupfilds(groupfilds);
-					mparam0.setSumfilds(sumfilds);
-					mparam0.setWidth(width); 
-					obj[i]=mparam0;
-				} 
+					ArrayList<String> groupfilds = (ArrayList<String>) oo1[0];//分组字段
+					ArrayList<String> sumfilds = (ArrayList<String>) oo1[1];//合计字段
+					String ctype = CCliTool.objToString(oo1[2]); //图表类型 
+					String width = CCliTool.objToString(oo1[3]);//宽度
+					json.put("selGroup", groupfilds);
+					json.put("selValue", sumfilds);
+					json.put("chartTypeValue", ctype);
+					json.put("showChart", true);
+					json.put("width", width);
+					bgroup.add(json);
+				}
+				mparam.setBgroupList(bgroup);
+				mparam.setBgroup(true);
 			}
 		}
-		if(obj == null)
-			retMap.put("mparams", mparam);
-		else
-			retMap.put("mparams", obj);
+		retMap.put("mparams", mparam);
 		reoReturnObj.setData(retMap);
 		WriteJsonString(response, reoReturnObj);
 	}
