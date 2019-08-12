@@ -37,7 +37,7 @@ public class APIConst {
 	public static final String APIID_FINDDATA="finddata";
 	public static final String APIID_FINDCELLDATA="findcelldata";
 	public static final String APIID_FINDSTATDATA="findstatdata";//获取统计数据
-	public static final String APIID_BIPINSAID="bipinsaid";//获取统计数据
+	public static final String APIID_BIPINSAID="bipinsaid";//
 	
 	
 	//保存数据是提交的数据类型，分为json格式和cell格式
@@ -47,7 +47,6 @@ public class APIConst {
 	public static final String APIID_WORKFLOW = "workflow";//工作流
 	
 	public static final String APIID_DLGSQLRUN = "dlgsqlrun" ;//弹出框执行sql 
-	public static final String APIID_DLGCELLRUN = "dlgacellrun";//弹出对象按钮执行
 
 	
 	public static final String APIID_RPT = "rpt";//RPT
@@ -73,6 +72,5 @@ public class APIConst {
 	public static final int APIID_TM_RL  = 249;//重新加载RMQ配置信息
 	
 	public static final String APIID_EXPDATA="expdata";
-	
 	
 }

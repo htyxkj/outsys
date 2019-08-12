@@ -102,7 +102,7 @@ public class WebServiceAPI extends HttpServlet {
 			}else if (APIConst.APIID_SINGLELOGIN.equals(apiStr)) {//WEB端登录，需要用秘钥
 				signIn(request, response);
 			}else if (APIConst.APIID_MPARAMS.equals(apiStr)){//获取菜单参数
-//				procdbf(request, response);
+			//				procdbf(request, response);
 				getMenuParams(request, response);
 			}else if (APIConst.APIID_CELLPARAMS.equals(apiStr)) {//获取cell元素  参数：dbid,usercode,pcell
 				getMenuCells(request, response); 
@@ -119,26 +119,23 @@ public class WebServiceAPI extends HttpServlet {
 					_log.error("",e);
 					error.setMessage(e.getMessage());
 					WriteJsonString(response, error);
-				}
+				}	
 			} else if(APIConst.APIID_WORKFLOW.equals(apiStr)) {
 				getWorkFlow(request, response);
 			}else if (APIConst.APIID_FINDSTATDATA.equals(apiStr)){//报表页面进行图表统计
-			    findStatData(request, response);
-		  } else if(APIConst.APIID_BIPINSAID.equals(apiStr)) {
-			  getBipInsAidInfo(request, response);
-		  }else if(APIConst.APIID_TA_MSG.equals(apiStr)){//任务消息操作
-			  taskAndIM(request, response);
-		  }else if(APIConst.APIID_DLGSQLRUN.equals(apiStr)){//自定义按钮执行SQL
-			  dlgSqlRun(request, response);
-		  }else if(APIConst.APIID_DLGCELLRUN.equals(apiStr)){//自定义按钮对象保存
-			  
-		  }else if(APIConst.APIID_RPT.equals(apiStr)) {
-			  rptInfo(request, response);
-		  }
-		else{
-			error.setMessage("错误的请求："+apiStr);
-			WriteJsonString(response, error);
-		}
+				findStatData(request, response);
+			} else if(APIConst.APIID_BIPINSAID.equals(apiStr)) {
+				getBipInsAidInfo(request, response);
+			}else if(APIConst.APIID_TA_MSG.equals(apiStr)){//任务消息操作
+				taskAndIM(request, response);
+			}else if(APIConst.APIID_DLGSQLRUN.equals(apiStr)){//自定义按钮执行SQL
+				dlgSqlRun(request, response);
+			}else if(APIConst.APIID_RPT.equals(apiStr)) {
+				rptInfo(request, response);
+			}else{
+				error.setMessage("错误的请求："+apiStr);
+				WriteJsonString(response, error);
+			}
 		}catch (Exception e){
 			_log.error("",e);
 			WriteJsonString(response, error);
@@ -146,6 +143,7 @@ public class WebServiceAPI extends HttpServlet {
 	} 
 	
 	/**
+	 * 处理RPT信息
 	 * @param request
 	 * @param response
 	 * 2019-07-25 17:33:31
@@ -201,7 +199,7 @@ public class WebServiceAPI extends HttpServlet {
 			_wa.usetran = false;
 			_wa.db_id = dbid;
 			Object[] obj = (Object[]) _app.universalInvoke(_wa);
-			if(CCliTool.objToInt(obj[0],2) == 2){
+			if(CCliTool.objToInt(obj[0],-1) == -1){
 				ret.setId(2);
 				ret.setMessage(obj[1].toString());
 				WriteJsonString(res, ret);
@@ -664,11 +662,13 @@ public class WebServiceAPI extends HttpServlet {
 					ArrayList<String> sumfilds = (ArrayList<String>) oo1[1];//合计字段
 					String ctype = CCliTool.objToString(oo1[2]); //图表类型 
 					String width = CCliTool.objToString(oo1[3]);//宽度
+					String title = CCliTool.objToString(oo1[4]);//宽度
 					json.put("selGroup", groupfilds);
 					json.put("selValue", sumfilds);
 					json.put("chartTypeValue", ctype);
 					json.put("showChart", true);
 					json.put("width", width);
+					json.put("title", title);
 					bgroup.add(json);
 				}
 				mparam.setBgroupList(bgroup);
@@ -758,7 +758,7 @@ public class WebServiceAPI extends HttpServlet {
 	}
 	
 	/**
-	 * 获取业务定义
+	 * 获取辅助
 	 * @param request
 	 * @param response
 	 * @throws Exception 
@@ -1069,27 +1069,21 @@ public class WebServiceAPI extends HttpServlet {
 	 */
 	private void findStatData(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
-		String dbid = request
-				.getParameter("dbid"), userCode = request
-				.getParameter("usercode");
-		String pcell = request.getParameter(cl.ICL.pcell);
-		String pdata1 = request.getParameter(cl.ICL.pdata);
-		int pageSize = CCliTool.objToInt(request.getParameter("pageSize"),20);
-		int currentPage = CCliTool.objToInt(request.getParameter("currentPage"),1);
-		  
-		if(pdata1 == null || pdata1.equals("{}")){
-			pdata1 = "";
-		}
-		String pdata =decode(pdata1);// request.getParameter(cl.ICL.pdata);
+		String dbid = request.getParameter("dbid"), userCode = request.getParameter("usercode");
+		String pcellcont = request.getParameter("qe");
 		String pgrpfld = request.getParameter("groupfilds");
-		String pgrpdatafld = request.getParameter("groupdatafilds"); 
-		String psearch = request.getParameter("psearch");		
+		String pgrpdatafld = request.getParameter("groupdatafilds");  		
 		HttpSession hss = request.getSession();
 		HashMap<String, Object> mp = APIUtil.getdbuser(dbid, userCode);
 		APIUtil.cpTOHttpSession(mp, hss);
 		ReturnObj reoReturnObj = new ReturnObj();
 		if(!checkLogin(response, hss, reoReturnObj))
 			return ;
+		String jsonData = decode(pcellcont);
+		QueryEntity queryEntity = JSONObject.parseObject(jsonData, QueryEntity.class);
+		String pdata = queryEntity.getCont();
+		String psearch = queryEntity.getTcell();
+		String pcell = queryEntity.getPcell();
 		if(psearch!=null){
 			Cells tjcells = (Cells) universaInvoke(34, cl.CLPF.SUnivServ, null, new Object[] { psearch }, false, hss);
 			APIUtil.cpTOHttpSession(mp, hss);
@@ -1105,7 +1099,7 @@ public class WebServiceAPI extends HttpServlet {
 		countCell = (Cells)o0[0];
 		pgrpfld =  CCliTool.objToString(o0[1]);
 		pgrpdatafld = CCliTool.objToString(o0[2]);
-		PageLayOut pageLayOut = new PageLayOut(currentPage,pageSize,pdata); 
+		PageLayOut pageLayOut = new PageLayOut(1,10000,pdata); 
 		LayCells layCells = new LayCells(countCell);
 		Map<String,Object> retMap = new HashMap<String, Object>();
 		makeCountValues(hss, countCell,pageLayOut,pgrpfld,pgrpdatafld);
@@ -1143,7 +1137,12 @@ public class WebServiceAPI extends HttpServlet {
 		}
 		return retcels;
 	}
-	
+	/**
+	 * 暂时没有用到
+	 * @param request
+	 * @param response
+	 * @throws Exception
+	 */
 	@SuppressWarnings("unchecked")
 	protected void getCellData(HttpServletRequest request,HttpServletResponse response) throws Exception {
 		String dbid = request
@@ -1299,7 +1298,12 @@ public class WebServiceAPI extends HttpServlet {
 		reoReturnObj.setData(retMap);
 		WriteJsonString(response, reoReturnObj);  
 	}
-
+	/**
+	 * 暂时没有用到
+	 * @param request
+	 * @param response
+	 * @throws Exception
+	 */
 	protected void expData(HttpServletRequest request,HttpServletResponse response) throws Exception {
 		String dbid = request
 				.getParameter("dbid"), userCode = request
@@ -1690,7 +1694,11 @@ public class WebServiceAPI extends HttpServlet {
 			WriteJsonString(response, reoReturnObj);
 		}
 	}
-	
+	/**
+	 * 执行弹出框SQL
+	 * @param request
+	 * @param response
+	 */
 	@SuppressWarnings("unchecked")
 	private void dlgSqlRun(HttpServletRequest request, HttpServletResponse response){
 		ReturnObj reoReturnObj = new ReturnObj();
@@ -1727,9 +1735,7 @@ public class WebServiceAPI extends HttpServlet {
 		}finally{
 			WriteJsonString(response, reoReturnObj);
 		}
-	}
-	
-	
+	}  
 	/***
 	 * 检测用户是否已经登陆
 	 * @param dbid 数据库连接ID

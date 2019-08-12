@@ -40,18 +40,19 @@ import com.alibaba.fastjson.JSONObject;
 public class WebApiInvoke extends DBInvoke {
 	private static Logger _log = LoggerFactory.getLogger(WebApiInvoke.class);
 
+	public static final int API_InitCelInc = 100;
+	
 	public static final int API_FIND_DATA = 200;
 	public static final int API_FIND_DATACount = 201; // 统计取数
+
 	public static final int API_Count = 300; // 取统计条件（按照菜单参数ID，常量中定义WB.菜单参数ID）
-
-	public static final int API_ASSISTTYPE = 500;// 获取辅助类型
-
 	public static final int API_CountFLD = 301; // 取统计条件（按照菜单参数ID，常量中定义WB.菜单参数ID）
 	public static final int API_CountSbds = 302; //获取常量  根据名称获取常量公式 不做任何业务逻辑处理
 	public static final int API_DLGSQLRUN = 304; //获取常量中的DLG 弹出框按钮执行
 
-	public static final int API_InitCelInc = 100;
 	public static final int API_exportExcel = 400;
+
+	public static final int API_ASSISTTYPE = 500;// 获取辅助类型
 	
 	
 	private static SQLExecQuery _eq;
@@ -105,7 +106,7 @@ public class WebApiInvoke extends DBInvoke {
 			String jsonStr = (String)wa.params[0];
 			String btnInfo = (String)wa.params[1];
 			return runDLGA(eq,jsonStr,btnInfo);
-		}
+		} 
 		return null;
 	}
 
@@ -149,7 +150,7 @@ public class WebApiInvoke extends DBInvoke {
 			Object clsdbs = eq.queryOne("select sbds,cid from inssyscl where sname='WB."+sbuid+"'");
 			//xh.sorg;xha.qty,xha.fcy;bar;order by sid;100|xh.sorg;xha.qty,xha.fcy;bar;order by sid;100
 			String[] grpfld = null,sumflds = null;
-			String chartType,width="";
+			String chartType,width="",title;
 			Object[] retuObj = null;
 			if(clsdbs!=null){
 				String[] strArr = CCliTool.objToString(clsdbs).split("\\|");
@@ -160,6 +161,7 @@ public class WebApiInvoke extends DBInvoke {
 					grpfld = flds[0].split(",");
 					sumflds = flds[1].split(",");
 					chartType = flds[2]; 
+					title = flds[4]; 
 					if(flds.length >=4)
 						width = flds[3];
 					else {
@@ -175,7 +177,7 @@ public class WebApiInvoke extends DBInvoke {
 						String _fld1 = sumflds[i];
 						sumArrayList.add(_fld1);
 					}
-					retuObj[j] = new Object[]{grplist,sumArrayList,chartType,width}; 
+					retuObj[j] = new Object[]{grplist,sumArrayList,chartType,width,title}; 
 				}
 			}else{
 				return null;
@@ -849,5 +851,5 @@ public class WebApiInvoke extends DBInvoke {
 			str[1] = script; 
 		} 
 		return str;
-	} 
+	}  
 }

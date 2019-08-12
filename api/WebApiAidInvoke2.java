@@ -463,7 +463,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 		String key = eq.db_id + REDISAID + id;
 		// 从redis中获取辅助定义
 		String ass = RedisHelper.get(key);
-		if (ass != null && !initRedis) {
+		if (ass != null && !initRedis && !ass.equals("null")) {
 			bipInsAid = JSONObject.parseObject(ass, BipInsAidNew.class);
 			if (binit && !bipInsAid.getbType().equals(BipInsAidType.CQueryEditor))
 				bipInsAid.setSlink(null);
@@ -472,7 +472,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 		synchronized (key.intern()) {
 			// 二次获取
 			ass = RedisHelper.get(key);
-			if (ass != null  && !initRedis) {
+			if (ass != null  && !initRedis && !ass.equals("null")) {
 				bipInsAid = JSONObject.parseObject(ass, BipInsAidNew.class);
 				if (binit && !bipInsAid.getbType().equals(BipInsAidType.CQueryEditor))
 					bipInsAid.setSlink(null);

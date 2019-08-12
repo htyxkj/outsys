@@ -3,14 +3,14 @@
  */
 package inetbas.web.outsys.tools;
 
-import java.util.ArrayList;
-
 import inet.HVector;
 import inetbas.cli.cutil.CCliTool;
 import inetbas.pub.coob.Cell;
 import inetbas.pub.coob.Cells;
 import inetbas.sserv.SQLExecQuery;
 import inetbas.web.outsys.entity.QueryEntity;
+
+import java.util.ArrayList;
 
 /**
  * @author www.bip-soft.com
