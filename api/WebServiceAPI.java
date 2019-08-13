@@ -1116,7 +1116,7 @@ public class WebServiceAPI extends HttpServlet {
 
 	//获取辅助类型
 	private LayCells getAssistType (LayCells retcels,HttpSession hss) throws Exception{
-		LayCell[] cell = (LayCell[]) retcels.cels;
+		LayCell[] cell = retcels.cels;
 		for (int i = 0; i < cell.length; i++) {
 			LayCell lCell = cell[i];
 			if(lCell.assist){//是否是辅助

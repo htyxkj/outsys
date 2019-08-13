@@ -7,6 +7,7 @@ import inetbas.pub.coob.CBasTool;
 import inetbas.pub.coob.Cell;
 
 import java.sql.Types;
+import java.util.ArrayList;
 
 import cl.ICL;
 
@@ -40,7 +41,8 @@ public class LayCell {
 	
 
 	public int ccCharleng=0;//文本框长度
-
+	public ArrayList<String> refCellIds = new ArrayList<String>();
+	public ArrayList<String> pRefIds = new ArrayList<String>();
 	public LayCell(){}
 
 	public LayCell(Cell cell) {

@@ -4,6 +4,7 @@
 package inetbas.web.outsys.uiparam;
 
 import inetbas.cli.cutil.CCliTool;
+import inetbas.pub.coob.Cell;
 import inetbas.pub.coob.Cells;
 
 import java.io.Serializable;
@@ -57,11 +58,13 @@ public class LayCells implements Serializable {
 			LayCell layCell = new LayCell(cells.all_cels[i]);
 			cels[i] = layCell;
 		}
+		initRefs();
 		int childLayCelsCount = cells.getChildCount();
 		if(childLayCelsCount>0)
 			haveChild = true;
 		for(int i = 0;i < childLayCelsCount; i++){
 			LayCells cells2 = new LayCells(cells.getChild(i));
+			cells2.initRefs();
 			addChild(cells2);
 		}
 		x_pk = CCliTool.indexPKID(cells,true,true);
@@ -135,6 +138,85 @@ public class LayCells implements Serializable {
 		  }
 		 }
 		 return null;
+	}
+	
+	/**
+	 * 初始化公式引用
+	 * 2019-08-12 16:51:26
+	 */
+	public void initRefs() {
+		for(int i=0;i<cels.length;i++) {
+			LayCell cell = cels[i];
+			String script = cell.script;
+			if((cell.attr&Cell.USEBDS)>0||script!=null) {
+				if(script!=null) {
+					if(script.startsWith("=:")) {
+						script = script.substring(2);
+						//sql("AM",$(select sum(b.qty) from hta b inner join ht a 
+						//on a.sid=b.sid where a.sbuid='2111' and {b.barcode=barcode} and {b.cxh=cxh} and {b.gdic=gdic}))
+						if(script.startsWith("sql(")) {
+							int _q = script.indexOf("{");
+							while (_q>-1) {
+								int _qn = CCliTool.nextBarcket(script.toCharArray(), _q, script.length(), '{');
+								String s1 = script.substring(_q+1,_qn);
+								String[] ss = s1.split("=");
+								String s0 = ss[1];
+								if(!cell.refCellIds.contains(s0))
+									cell.refCellIds.add(s0);
+								script = script.substring(_qn+1);
+								_q = script.indexOf("{");
+							}
+						}
+					}
+					if(script.indexOf("[")>-1) {
+						int _q = script.indexOf("[");
+						while (_q>-1) {
+							int _qn = CCliTool.nextBarcket(script.toCharArray(), _q, script.length(), '[');
+							String s0 = script.substring(_q+1,_qn);
+							if(s0.charAt(0)=='^'){
+								s0 = s0.substring(1);
+								if(!cell.pRefIds.contains(s0))
+									cell.pRefIds.add(s0);
+							}else {
+								if(!cell.refCellIds.contains(s0))
+									cell.refCellIds.add(s0);
+							}
+
+							script = script.substring(_qn+1);
+							_q = script.indexOf("[");
+						}
+					}
+					//自增
+					if((cell.attr&0x80)>0&&cell.type==12) {
+						int _q = script.indexOf(",");
+						while (_q>0) {
+							String s0 = script.substring(0, _q);
+							if(!cell.refCellIds.contains(s0))
+								cell.refCellIds.add(s0);
+							script = script.substring(_q+1);
+							_q = script.indexOf(",");
+						}
+						if(script.length()>0) {
+							String s0 = script;
+							if(!cell.refCellIds.contains(s0))
+								cell.refCellIds.add(s0);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	public LayCell findById(String cellId) {
+		LayCell c0 = null;
+		for(int i=0;i<cels.length;i++) {
+			LayCell cell = cels[i];
+			if(cell.id.equals(cellId)) {
+				c0 = cell;
+				break;
+			}
+		}
+		return c0;
 	}
 	
 
