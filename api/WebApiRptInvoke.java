@@ -8,6 +8,7 @@ import inet.ReadLine;
 import inetbas.cli.cutil.CCliTool;
 import inetbas.cli.cutil.CDBLINK;
 import inetbas.cli.cutil.CRptItem;
+import inetbas.pub.cbds.ScriptProc;
 import inetbas.pub.coob.CBasTool;
 import inetbas.pub.coob.CRecord;
 import inetbas.pub.coob.Cell;
@@ -62,6 +63,7 @@ public class WebApiRptInvoke extends DBInvoke {
 			Cells celltj = SSTool.readCCell(eq, qe.getTcell(), false);
 			//获取查询条件，并将json格式的数据转CRecord记录
 			CRecord cRecord = DataTools.makeCRecordByJsonStr(celltj,qe.getCont());
+//			ScriptProc.
 			if(qe.getType() == 2){ //RPT
 				return rpt(eq, cell, qe, cellid, celltj, cRecord);
 			}else if (qe.getType() == 3){	//外部SQL

@@ -807,7 +807,8 @@ public class WebServiceAPI extends HttpServlet {
 	private void saveData(HttpServletRequest request,HttpServletResponse response) throws Exception{
 		String dbid = request
 				.getParameter("dbid"), userCode = request
-				.getParameter("usercode"),pcell = request.getParameter(cl.ICL.pcell);		
+				.getParameter("usercode"),pcell = request.getParameter(cl.ICL.pcell),buid = request.getParameter("buid");	
+		
 		int dataType = CCliTool.objToInt(request.getParameter("datatype"), 0); 
 		HttpSession hss = request.getSession();
 		HashMap<String, Object> mp = APIUtil.getdbuser(dbid, userCode);
@@ -819,6 +820,7 @@ public class WebServiceAPI extends HttpServlet {
 		Cells cells = (Cells) getCellsBypcell(pcell, hss);
 		 
 		CellsUtil.initCells(cells);
+		CellsUtil.initCellCtrl(cells,buid);
 		cells = (Cells)universaInvoke(WebApiInvoke.API_InitCelInc, APIIV, null, new Object[]{cells}, false, hss);
 		CRecord cr = new CRecord(0);
 		if (dataType == APIConst.CELLDATA) {
@@ -836,7 +838,16 @@ public class WebServiceAPI extends HttpServlet {
 		}
 		if((cr.c_state & CRecord.INSERT)==1)
 			CCliTool.inc_Calc2(cells, cr.getValues(), -1);
-		 CIDVAL o0 = (CIDVAL)universaInvoke(1, null, "SAVE", new Object[]{cells,cr}, true, hss);
+		 Object o1 = universaInvoke(1, null, "SAVE", new Object[]{cells,cr}, true, hss);
+		 //(CIDVAL)
+		 CIDVAL o0 = null,o2 = null;
+		 if(o1 instanceof Object[]) {
+			 Object[] on = (Object[])o1;
+			 o0 = (CIDVAL)on[0];
+			 o2 = (CIDVAL)on[1];
+		 }else if(o1 instanceof CIDVAL) {
+			 o0 = (CIDVAL) o1;
+		 }
 		 Map<String, Object> redata = new HashMap<String, Object>();
 		 if((cr.c_state&CRecord.INSERT)>0 ){
 			 if(o0 == null){
@@ -852,7 +863,11 @@ public class WebServiceAPI extends HttpServlet {
 		 }else if(cr.c_state == 4){
 			 _log.info("delData");
 		 }
+
 		 reoReturnObj.makeSuccess();
+		 if(o2!=null) {
+			 reoReturnObj.setMessage(o2.value+"");
+		 }
 		 reoReturnObj.setData(redata);
 		 WriteJsonString(response, reoReturnObj);
 	}

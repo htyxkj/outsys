@@ -3,6 +3,8 @@
  */
 package inetbas.web.outsys.tools;
 
+import inetbas.CMain;
+import inetbas.cli.cutil.CCells;
 import inetbas.cli.cutil.CCliTool;
 import inetbas.pub.coob.Cell;
 import inetbas.pub.coob.Cells;
@@ -28,6 +30,81 @@ public class CellsUtil {
 				initlink(cells2);
 			}
 		}
+	}
+	
+	/**
+	 * 初始化控制字段定义,它在CDataSet中调用
+	 */
+	public static void initCellCtrl(Cells cell, String buid) {
+		Cells cellt = cell;
+		long attr = cellt.attr;
+		if ((attr & cl.ICL.ocCondiction) != 0)
+			return;
+		boolean brf = false;
+		if ((attr & cl.ICL.ocCtrl) != 0 || cellt.c_par == null) {
+			boolean bbu = buid != null && buid.length() > 0;
+			if ((bbu && cellt.sysno < 1)
+					|| (!bbu && (attr & cl.ICL.ocORGUSR) == 0))
+				return;// ;-没有业务号,又不设权限,系统不计算缺省条件,系统可以做假业务号实现控制功能(设业务号的,系统号不能小于1)。
+			if (bbu) {
+				int t0, xs[];
+				String s0, ss0[];
+				ss0 = new String[] { cl.ICL.F_MKDATE, cl.ICL.F_STATE,
+						cl.ICL.F_REF, cl.ICL.F_MODITIME, cl.ICL.F_LKBUID,
+						cl.ICL.F_LKID, cl.ICL.F_HPDATE, cl.ICL.F_BUID,
+						cl.ICL.F_MAKE, cl.ICL.F_SMODI, cl.ICL.F_ORG };
+				CCliTool.updateFields(ss0, cellt);
+				cellt.buid = buid;
+				Cell[] cels = cellt.db_cels;
+				xs = CCliTool.toIndexs(cellt, ss0, 0);
+				cellt.xs_TRSM = initToBits(xs, 0, 4);// 记录最后修改人和时间只对改变发生作用
+				// ;--来源单号和来源类别需要成对
+				if (xs[4] < 0)
+					xs[5] = -1;
+				else if (xs[5] < 0)
+					xs[4] = -1;
+				cellt.xs_BDNL = initToBits(xs, 4, 4);
+				t0 = xs[7];// ;--业务号。
+				if (t0 > 0)
+					CCliTool.checkCelInit(cels[t0], buid);
+				t0 = xs[0];
+				if (t0 > 0)
+					cels[t0].attr |= Cell.AUTOREF;// ;-制单日期回填
+				t0 = xs[1];
+				if (t0 > 0)
+					CCliTool.checkCelInit(cels[t0], String.valueOf(cl.ICL.EANEW));// ;-状态初值为新建
+				t0 = xs[8];
+				if (t0 > 0)
+					CCliTool.checkCelInit(cels[t0], CMain.USRCODE);// ;-制单人
+			} else
+				brf = true;
+		} else if ((attr & (cl.ICL.ocOut | cl.ICL.ocReadonly)) == 0) {
+			int x0 = cellt.nameToIndex(cellt.getFMap(cl.ICL.F_LKBUID));// ;-子表带拷贝定义。
+			if (x0 > 0)
+				cellt.xs_BDNL = x0 | ((x0 - 1) << 8);
+			brf = true;
+		}
+		if (brf) {
+			int x0 = cellt.nameToIndex(cellt.getFMap(cl.ICL.F_REF), false,
+					false);
+			if (x0 > 0)
+				cellt.xs_TRSM = x0 << 16;// ;-子表或普通表可以通过该字段加特殊锁
+		}
+		CCliTool.initLinkBZ(cellt);
+		if(cellt.get_subs()!=null) {
+			for(int i=0;i<cellt.get_subs().length;i++)
+				initCellCtrl(cellt.get_subs()[i], buid);
+		}
+	}
+	
+	public static int initToBits(int[] is0, int x0, int c0) {
+		int r0 = 0, t0;
+		for (int i = 0; i < c0; i++) {
+			t0 = is0[x0++];
+			if (t0 > 0)
+				r0 |= t0 << (8 * i);
+		}
+		return r0;
 	}
 	
 	public static void initlink(Cells cell) {
