@@ -31,6 +31,8 @@ public class APIConst {
 
 	//访问数据的APIId
 	public static final String APIID="apiId";
+	//导出数据
+	public static final String APIID_EXPDATA="expdata";
 	
 	public static final String APIID_TIME="systime";
 	//查询数据ID
@@ -71,6 +73,5 @@ public class APIConst {
 	public static final int APIID_TM_MSG_UPD  = 213;//更新状态
 	public static final int APIID_TM_RL  = 249;//重新加载RMQ配置信息
 	
-	public static final String APIID_EXPDATA="expdata";
 	
 }

@@ -130,8 +130,19 @@ public class WebServiceAPI extends HttpServlet {
 				taskAndIM(request, response);
 			}else if(APIConst.APIID_DLGSQLRUN.equals(apiStr)){//自定义按钮执行SQL
 				dlgSqlRun(request, response);
-			}else if(APIConst.APIID_RPT.equals(apiStr)) {
+			}else if(APIConst.APIID_RPT.equals(apiStr)) {//RPT
 				rptInfo(request, response);
+			}else if(APIConst.APIID_TIME.equals(apiStr)) {//获取服务器时间
+				long curr = System.currentTimeMillis();
+				error.makeSuccess();
+				JSONObject jsonObject = new JSONObject();
+				jsonObject.put("time", curr);
+				HashMap<String, Object> data = new HashMap<String, Object>();
+				data.put("data", jsonObject);
+				error.setData(data);
+				WriteJsonString(response, error);
+			}else if(APIConst.APIID_EXPDATA.equals(apiStr)){//导出Excel
+				expData(request, response);
 			}else{
 				error.setMessage("错误的请求："+apiStr);
 				WriteJsonString(response, error);
@@ -1314,7 +1325,7 @@ public class WebServiceAPI extends HttpServlet {
 		WriteJsonString(response, reoReturnObj);  
 	}
 	/**
-	 * 暂时没有用到
+	 * 导出excel
 	 * @param request
 	 * @param response
 	 * @throws Exception
@@ -1323,68 +1334,17 @@ public class WebServiceAPI extends HttpServlet {
 		String dbid = request
 				.getParameter("dbid"), userCode = request
 				.getParameter("usercode");
-		String pcell = request.getParameter(cl.ICL.pcell);
-		String pdata1 = request.getParameter(cl.ICL.pdata);
-		if(pdata1 == null || pdata1.equals("{}")){
-			pdata1 = "";
-		}
-		String pdata =decode(pdata1);// request.getParameter(cl.ICL.pdata);
-		String pbill = request.getParameter("bebill");
-		int bid = CCliTool.objToInt(pbill, 1);
-		boolean isbill = bid==1;
+		String pcellcont = request.getParameter("qe");
 		HttpSession hss = request.getSession();
 		HashMap<String, Object> mp = APIUtil.getdbuser(dbid, userCode);
 		APIUtil.cpTOHttpSession(mp, hss);
 		ReturnObj reoReturnObj = new ReturnObj();
 		if(!checkLogin(response, hss, reoReturnObj))
 			return ;
-		Object cells = CellsSessionUtil.getCellsByCellId(dbid, pcell);
-		Cells c1 = null,tjcell=null;
-		if (cells instanceof Cells) {
-			c1 = (Cells) cells;
-		} else {
-			Cells[] cells2 = (Cells[]) cells;
-			for (int i = 0; i < cells2.length; i++) {
-				Cells ci = cells2[i];
-				if((ci.attr & ICL.ocCondiction) > 0 && !isbill){
-					tjcell = ci;
-				}
-				if ((ci.attr & ICL.ocCondiction) == 0) {
-					c1 = ci;
-					break;
-				}
-			}
-		}
-		int currPage = CCliTool.objToInt(request.getParameter("currentPage"),0);
-		_log.info("currentPage:"+currPage);
-		int pageSize = CCliTool.objToInt(request.getParameter("pageSize"),20);
-		_log.info("pageSize:"+pageSize);
-		String cellid=request.getParameter("cellid");
-		cellid = cellid==null ? "" : cellid;
-		if(cellid.length()>0){
-			if (cells instanceof Cells) {
-				c1 = (Cells) cells;
-				if(!c1.obj_id.equals(cellid))
-					c1 = c1.getChild(cellid, false);
-			}else{
-				Cells[] cells2 = (Cells[]) cells;
-				for(int i=0;i<cells2.length;i++){
-					Cells ci = cells2[i];
-					if(ci.obj_id.equals(cellid)){
-						c1 = ci;
-						break;
-					}
-				}
-			}
-		}
-		Map<String, Object> retMap = new HashMap<String, Object>();
-		if(!isbill&&tjcell!=null){
-			LayCells contLayCel = new LayCells(tjcell);
-			retMap.put("contCel", contLayCel);
-		}
-		pdata = makeSearchTj(tjcell,pdata);
-		PageLayOut pageLayOut =  new PageLayOut(currPage,pageSize,pdata);
-		String file = expValues(hss, c1,pageLayOut);
+		String jsonData = decode(pcellcont);
+		QueryEntity queryEntity = JSONObject.parseObject(jsonData, QueryEntity.class);
+		queryEntity.getPage().setPageSize(65536);
+		String file = CCliTool.objToString(universaInvoke(400, APIPage, null, new Object[]{queryEntity}, false, hss)); 
 		FileInputStream fis = new FileInputStream(file);
 		byte[] b = new byte[1024];
 		response.setCharacterEncoding(UTF8);
@@ -1392,11 +1352,10 @@ public class WebServiceAPI extends HttpServlet {
 		response.setHeader("Access-Control-Allow-Methods","POST, GET, OPTIONS");
 		response.setHeader("Access-Control-Allow-Headers","X-HTTP-Method-Override, Content-Type, x-requested-with, Authorization");
 		response.setCharacterEncoding("UTF-8");
-		String file_name = new String("fdsfds".getBytes(), "ISO-8859-1");
+		String file_name = new String("file_name".getBytes(), "ISO-8859-1");
 		response.setHeader("Content-Disposition",
 				String.format("attachment; filename=\"%s\"", file_name));
 		response.setContentType("application/octet-stream;charset=utf-8");
-		_log.info(file_name);
 		// 获取响应报文输出流对象
 		ServletOutputStream out = response.getOutputStream();
 		// 输出
@@ -1410,10 +1369,6 @@ public class WebServiceAPI extends HttpServlet {
 		File file2 = new File(file);
 		file2.delete();
 		_log.info("发送完成！"); 
-//		retMap.put("pages", pageLayOut);
-//		reoReturnObj.makeSuccess();
-//		reoReturnObj.setData(retMap);
-//		WriteJsonString(response, reoReturnObj);
 	}
 
 	/**
@@ -1486,12 +1441,6 @@ public class WebServiceAPI extends HttpServlet {
 	private void makeValues(HttpSession hss, Cells c1, PageLayOut pageLayOut)
 			throws Exception {
 		pageLayOut =  (PageLayOut)universaInvoke(WebApiInvoke.API_FIND_DATA, APIIV, null, new Object[] { c1,pageLayOut}, false, hss);
-	}
-	
-	private String expValues(HttpSession hss, Cells c1, PageLayOut pageLayOut)
-			throws Exception {
-		String file =  (String)universaInvoke(WebApiInvoke.API_exportExcel, APIIV, null, new Object[] { c1,pageLayOut}, false, hss);
-		return file;
 	}
 	/***
 	 * 获取统计展开项和合计项

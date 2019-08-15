@@ -4,7 +4,6 @@ import inet.HVector;
 import inetbas.cli.cutil.CCliTool;
 import inetbas.pub.coob.Cell;
 import inetbas.pub.coob.Cells;
-import inetbas.pub.ojc.CExcel;
 import inetbas.serv.csys.DBInvoke;
 import inetbas.sserv.SGBVar;
 import inetbas.sserv.SQLExecQuery;
@@ -15,8 +14,6 @@ import inetbas.web.outsys.tools.ServScript;
 import inetbas.webserv.WAORGUSR;
 import inetbas.webserv.WebAppPara;
 
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -49,9 +46,7 @@ public class WebApiInvoke extends DBInvoke {
 	public static final int API_CountFLD = 301; // 取统计条件（按照菜单参数ID，常量中定义WB.菜单参数ID）
 	public static final int API_CountSbds = 302; //获取常量  根据名称获取常量公式 不做任何业务逻辑处理
 	public static final int API_DLGSQLRUN = 304; //获取常量中的DLG 弹出框按钮执行
-
-	public static final int API_exportExcel = 400;
-
+	
 	public static final int API_ASSISTTYPE = 500;// 获取辅助类型
 	
 	
@@ -96,9 +91,6 @@ public class WebApiInvoke extends DBInvoke {
 			}
 			initsubCellPoit(cell);
 			return cell;
-		}else if(id == API_exportExcel){
-			PageLayOut page = (PageLayOut) wa.params[1];
-			return exportFile(eq, (Cells) param[0], page);
 		}else if(id == API_ASSISTTYPE){
 			String editName = CCliTool.objToString(wa.params[0]);
 			return assistType(eq,editName);
@@ -109,36 +101,7 @@ public class WebApiInvoke extends DBInvoke {
 		} 
 		return null;
 	}
-
-
-	/**
-	 * @param eq
-	 * @param cells
-	 * @param page
-	 * @return
-	 * @throws Exception 
-	 */
-	public  static  String exportFile(SQLExecQuery eq, Cells cells, PageLayOut page) throws Exception {
-		HVector hh = findValues(eq, cells, page);
-		hh.insertElementAt(getCellTitle(cells), 0);
-		String dir = WebUPDFileService.getFileDir(eq.db_id, true);
-		String filesString = dir+""+WebUPDFileService.getNows()+".xls";
-		OutputStream out = new FileOutputStream(filesString);
-		CExcel.expExcel(out,hh,null,cells.all_cels,true,false);
-		out.close();
-		_log.info(filesString);
-		return filesString;
-	}
-	
-	public static Object[] getCellTitle(Cells cells){
-		Object[] o0 = new Object[cells.all_cels.length];
-		for(int i=0;i<cells.all_cels.length;i++){
-			o0[i] = cells.all_cels[i].labelString;
-		}
-		return o0;
-	}
-
-
+ 
 	/**
 	 * 获取统计字段
 	 * @param eq
@@ -617,142 +580,7 @@ public class WebApiInvoke extends DBInvoke {
 		return page;
 
 	}
-	
-	public static HVector findValues(SQLExecQuery eq, Cells cell,
-			PageLayOut page) throws Exception {
-		String sql0 = spelSQL(eq, cell, 0, page.queryCriteria, true, null);
-		String orderByString = "";
-		if (sql0.indexOf(" order by") > -1) {
-			orderByString = sql0.substring(sql0.indexOf(" order by "));
-			orderByString = orderByString
-					.substring(orderByString.indexOf("by") + 3);
-			sql0 = sql0.substring(0, sql0.indexOf(" order by "));
-		}
-		String sqlselect = sql0.substring(0, sql0.indexOf(" "));
-		String sqlform = sql0.substring(sql0.indexOf("from"));
-		String sqlfilds = sql0.substring(sql0.indexOf(" "),
-				sql0.indexOf("from"));
-		
-		int ii = cell.getParent()==null? cell.fkcc:(cell.pkcc-1);
-		Cell cc = cell.all_cels[ii>=0?ii:0];
-		if (orderByString.length()>0 && orderByString.indexOf(".")<0){
-			orderByString = (cell.exTbName==null? orderByString : (cell.exTbName+"."+orderByString));
-		}
-		String orderByStr = page.orderBy.length() > 0 ? page.orderBy
-				: (orderByString.length() > 0 ? orderByString : cc.ccName);
-		int startNum = 0, endNum = 0;
-		startNum = page.pageSize * (page.currentPage - 1);
-		endNum = page.pageSize * page.currentPage;
-		String queryCount = sqlselect + " count(*) from ("+sqlselect+" "+makefildesAsF1(sqlfilds)+" "+ sqlform+") b";
-		queryCount = SSTool.formatVarMacro(queryCount, eq);
-		_log.info(queryCount);
-		int count = CCliTool.objToInt(eq.queryOne(queryCount), 0);
-		page.setTotalSize(count);
-//		ArrayList<JSONObject> resList = new ArrayList<JSONObject>();
-		HVector queryRes = null;
-		if (eq.db_type == ICL.MSSQL) {
-			String querySql = sqlselect + " ROW_NUMBER() over(order by "
-					+ orderByStr + ") _r," + makefildesAsF1(sqlfilds) + " "
-					+ sqlform;
-			querySql = sqlselect + " " + makefildes(sqlfilds) + " from ("
-					+ querySql + ") _t where _r>" + startNum + " and _r<="
-					+ endNum;
-			querySql = SSTool.formatVarMacro(querySql, eq);
-			_log.info(querySql);
-			queryRes = eq.queryVec(querySql,page.pageSize);
-		}
-		if (eq.db_type == ICL.MYSQL) {
-			String querySql = sql0 + " order by " + orderByStr + " limit "
-					+ startNum + "," + page.pageSize + ";";
-			querySql = SSTool.formatVarMacro(querySql, eq);
-			_log.info(querySql);
-			queryRes = eq.queryVec(querySql,page.pageSize);
-		}
-		int celleng = cell.all_cels.length;
-		ArrayList<Integer> udffildlist = new ArrayList<Integer>();
-		for (int i = 0; i < celleng; i++) {
-			Cell fldcell = cell.all_cels[i];
-			if ((fldcell.attr & Cell.UDFCOL) > 0
-					&& (fldcell.attr & Cell.USEBDS) > 0) {
-				_log.info(fldcell.ccName + "===" + fldcell.script);
-				udffildlist.add(i);
-			}
-		}
-		if (queryRes != null) {
-			if (udffildlist.size() > 0) {
-				// 有自定义字段
-				HVector copyValues = new HVector();
-				for (int i = 0; i < queryRes.size(); i++) {
-					Object[] newValues = new Object[celleng];
-					Object[] oldValues = (Object[]) queryRes.elementAt(i);
-					int mm=0,_size=0;
-					for (int j = 0; j < udffildlist.size(); j++) {
-						int _indx = udffildlist.get(j);
-						Object o0 = getUDFValue(_indx,cell,oldValues);
-						for(int k=mm;k<_indx;k++){
-							Object ov = oldValues[k-_size];
-							String vv = ov==null?"":ov.toString();
-							if(ov instanceof Timestamp){
-								Cell c1 = cell.all_cels[k];
-								if(c1.ccType == 91){
-									vv = CCliTool.dateToString(ov, true, cl.ICL.DF_YMD);
-								}else{
-									vv = CCliTool.dateToString(ov, true, cl.ICL.DF_YMDHM);
-								}
-							}else{
-								vv = CCliTool.objToString(ov);
-							}
-							newValues[k] = vv;
-						}
-						newValues[_indx] = o0==null?"":o0;
-						mm = _indx+1;
-						_size++;
-					}
-					for(int k=mm;k<celleng;k++){
-						Object ov = oldValues[k-_size];
-						Object vv = ov==null?"":ov;
-						if(ov instanceof Timestamp){
-							Cell c1 = cell.all_cels[k];
-							if(c1.ccType == 91){
-								vv = CCliTool.dateToString(ov, true, cl.ICL.DF_YMD);
-							}else{
-								vv = CCliTool.dateToString(ov, true, cl.ICL.DF_YMDHM);
-							}
-						}
-						newValues[k] = vv;
-					}
-					copyValues.addElement(newValues);
-			}
-				queryRes = copyValues;
-			}else {
-				for (int i = 0; i < queryRes.size(); i++) {
-					Object[] ovsObjects = (Object[]) queryRes.elementAt(i);
-					for(int j=0 ;j < ovsObjects.length ; j++){
-						Object ov = ovsObjects[j];
-						Cell c1 = cell.all_cels[j];
-						Object vv =  ov== null ? "": ov;
-						if (ov instanceof Timestamp){
-							if(c1.ccType == 91){
-								vv = CCliTool.dateToString(ov, true, cl.ICL.DF_YMD);
-							}else{
-								vv = CCliTool.dateToString(ov, true, cl.ICL.DF_DYNC);
-							}
-						}else{
-							vv = CCliTool.objToString(vv);
-						}
-						ovsObjects[j] = vv;
-					}
-					queryRes.setElementAt(ovsObjects, i);
-				}
-			}
-			// 没有自定义字段
-//			for (int i = 0; i < queryRes.size(); i++) {
-//				resList.add((Object[]) queryRes.elementAt(i));
-//			}
-		}
-		return queryRes;
-
-	}
+	 
 
 	/**
 	 * @return
