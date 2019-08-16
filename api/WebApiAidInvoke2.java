@@ -107,7 +107,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 	 * @throws Exception
 	 * 2019-07-11 17:39:59
 	 */
-	public Object getCLInfoById(SQLExecQuery eq, String clid,boolean initRedis) throws Exception {
+	public static Object getCLInfoById(SQLExecQuery eq, String clid,boolean initRedis) throws Exception {
 		String key = eq.db_id + REDISAIDCL + clid;
 		String ass = RedisHelper.get(key);
 		BipInsAidNew bipInsAid = null;
@@ -281,7 +281,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 	 * @param bAidNew
 	 * @throws Exception 2019-07-11 13:55:38
 	 */
-	public void getBipInsAidDatasBySqls(SQLExecQuery eq, QueryEntity qe, BipInsAidNew bAidNew) throws Exception {
+	public static void getBipInsAidDatasBySqls(SQLExecQuery eq, QueryEntity qe, BipInsAidNew bAidNew) throws Exception {
 		// 去掉SQL中的[0+]...
 		String s0 = CommUtils.formartSql(bAidNew.getSlink());
 		_log.info(s0);
@@ -343,7 +343,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 	 * @param gfild
 	 * @return 2019-07-11 11:03:33
 	 */
-	private LayCell getLayCellById(BipInsAidNew bAidNew, String gfild) {
+	private static LayCell getLayCellById(BipInsAidNew bAidNew, String gfild) {
 		LayCell[] cells = bAidNew.getCells().cels;
 		LayCell c1 = null;
 		if (cells != null) {
@@ -367,11 +367,11 @@ public class WebApiAidInvoke2 extends DBInvoke {
 	 * @return 返回ArrayList<JSONObject> 2019-07-11 10:45:28
 	 */
 
-	public ArrayList<JSONObject> hvectorToArray(HVector hh, LayCell[] cells) {
+	public static ArrayList<JSONObject> hvectorToArray(HVector hh, LayCell[] cells) {
 		return hvectorToArray(hh, cells, 0);
 	}
 
-	public ArrayList<JSONObject> hvectorToArray(HVector hh, LayCell[] cells, int start) {
+	public static ArrayList<JSONObject> hvectorToArray(HVector hh, LayCell[] cells, int start) {
 		ArrayList<JSONObject> list = new ArrayList<JSONObject>();
 		for (int i = start; i < hh.size(); i++) {
 			Object[] oo = (Object[]) hh.elementAt(i);

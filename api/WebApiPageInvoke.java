@@ -16,14 +16,13 @@ import inetbas.sserv.SQLExecQuery;
 import inetbas.sserv.SSTool;
 import inetbas.web.outsys.api.uidata.UICData;
 import inetbas.web.outsys.api.uidata.UIRecord;
+import inetbas.web.outsys.entity.BipInsAidNew;
 import inetbas.web.outsys.entity.QueryEntity;
 import inetbas.web.outsys.tools.CellsUtil;
 import inetbas.web.outsys.tools.CommUtils;
 import inetbas.web.outsys.tools.DataTools;
 import inetbas.web.outsys.tools.SQLInfoE;
 import inetbas.web.outsys.tools.SQLUtils;
-import inetbas.web.webpage.api.WebApiAidInvoke;
-import inetbas.web.webpage.wxpub.VarObject;
 import inetbas.webserv.SErvVars;
 import inetbas.webserv.WebAppPara;
 
@@ -37,7 +36,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONObject;
+
 
 /**
  * 单据界面数据查询
@@ -298,23 +298,52 @@ public class WebApiPageInvoke extends DBInvoke {
 					String newVlStr = "";
 					for (int j = 0; j < cc.length; j++) {
 						if(exRef.containsKey(refs[0]+"_"+cc[j])){
-							newVlStr+=exRef.get(refs[0]+"_"+cc[j])+";";
+							String valStr = (String) exRef.get(refs[0]+"_"+cc[j]);
+							if(valStr == null || valStr.equals("")){
+								valStr = cc[j];
+							}
+							newVlStr+=valStr+";";
 						}else{
-							VarObject vobj = WebApiAidInvoke.findValues(eq, refs[0], cc[j], "", null);
-							if(vobj.getValues()!=null){
-								List<JSONObject> listJ = vobj.getValues();
-								for (int k = 0; k < listJ.size(); k++) {
-									JSONObject json = listJ.get(k);
-									if(json.containsKey(vobj.getAllCols()[vobj.getShowCols()[0]])){
-										String refKey = CCliTool.objToString(json.get(vobj.getAllCols()[vobj.getShowCols()[0]]));
-										String refVal = CCliTool.objToString(json.get(vobj.getAllCols()[vobj.getShowCols()[1]]));
-										if(refKey.equals(cc[j])){											
-											newVlStr+=refVal+";"; 
-										}
-										exRef.put(refs[0]+"_"+refKey, refVal);
+//							getCLInfoById(eq, oid,true);
+//							delBipInsAidInfoById(eq,oid);
+							String name = refs[0];
+							if(name.indexOf("{")!=-1){
+								name = name.replace("{", "");
+								name = name.replace("}", "");
+							}
+
+							BipInsAidNew aidvl =null;
+							if(name.indexOf("$") !=-1){
+								name = name.replace("$", "");
+								aidvl = (BipInsAidNew) WebApiAidInvoke2.getCLInfoById(eq, name,true);
+							}else if(name.indexOf("&") !=-1){
+								name = name.replace("&", "");
+								aidvl = (BipInsAidNew) WebApiAidInvoke2.getBipInsAidInfoById(eq, name, false,false);
+								QueryEntity qe = new QueryEntity();
+								String cont = "~"+aidvl.getCells().cels[0].id+"='"+cc[j]+"'";
+								qe.setCont(cont);
+								qe.setType(3);
+								WebApiAidInvoke2.getBipInsAidDatasBySqls(eq, qe , aidvl);
+								aidvl.setValues(qe.getValues());
+							}
+							if(aidvl!=null && aidvl.getValues().size()>0){
+								if(aidvl.getValues()!=null){
+									List<JSONObject> listJ = aidvl.getValues();
+									for (int k = 0; k < listJ.size(); k++) {
+										JSONObject json = listJ.get(k);
+										if(json.containsKey(aidvl.getCells().cels[0].id)){
+											String refKey = CCliTool.objToString(json.get(aidvl.getCells().cels[0].id));
+											String refVal = CCliTool.objToString(json.get(aidvl.getCells().cels[1].id));
+											if(refKey.equals(cc[j])){											
+												newVlStr+=refVal+";"; 
+											}
+											exRef.put(refs[0]+"_"+refKey, refVal);
+										} 
 									} 
 								} 
-							} 
+							}else{
+								newVlStr = cc[j]+";";
+							}
 						}
 					} 
 					if(!newVlStr.equals(""))
