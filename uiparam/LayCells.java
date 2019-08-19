@@ -20,6 +20,7 @@ public class LayCells implements Serializable {
 	public String obj_id;//对象Id 
 	public String desc;//对象描素
 	private long attr;//属性
+	public String sfix;//分组
 	public LayCell[] cels;//元素集合
 	public LayCells[] subLayCells;//子项
 	public String parentId="";//父对象Id
@@ -51,6 +52,7 @@ public class LayCells implements Serializable {
 		pkindex = cells.pkIndexs();
 		widthCell = cells.widthCell &0x3FF;
 		condiction = cells.condiction;
+		sfix = cells.fixedString;
 		initAttr();
 		int celLength = cells.all_cels.length;
 		cels = new LayCell[celLength];
@@ -160,10 +162,7 @@ public class LayCells implements Serializable {
 								int _qn = CCliTool.nextBarcket(script.toCharArray(), _q, script.length(), '{');
 								String s1 = script.substring(_q+1,_qn);
 								String[] ss = s1.split("=");
-								String s0 = ss[0];
-								if(ss.length>1) {
-									s0 = ss[1];
-								}
+								String s0 = ss[1];
 								if(!cell.refCellIds.contains(s0))
 									cell.refCellIds.add(s0);
 								script = script.substring(_qn+1);
