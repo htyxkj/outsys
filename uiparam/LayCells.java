@@ -160,7 +160,10 @@ public class LayCells implements Serializable {
 								int _qn = CCliTool.nextBarcket(script.toCharArray(), _q, script.length(), '{');
 								String s1 = script.substring(_q+1,_qn);
 								String[] ss = s1.split("=");
-								String s0 = ss[1];
+								String s0 = ss[0];
+								if(ss.length>1) {
+									s0 = ss[1];
+								}
 								if(!cell.refCellIds.contains(s0))
 									cell.refCellIds.add(s0);
 								script = script.substring(_qn+1);
