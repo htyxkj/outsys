@@ -1,6 +1,7 @@
 package inetbas.web.outsys.api;
 
 import inet.HVector;
+import inetbas.CMain;
 import inetbas.cli.cutil.CCliTool;
 import inetbas.pub.coob.CBasTool;
 import inetbas.pub.coob.CData;
@@ -102,7 +103,6 @@ public class WebServiceAPI extends HttpServlet {
 			}else if (APIConst.APIID_SINGLELOGIN.equals(apiStr)) {//WEB端登录，需要用秘钥
 				signIn(request, response);
 			}else if (APIConst.APIID_MPARAMS.equals(apiStr)){//获取菜单参数
-			//				procdbf(request, response);
 				getMenuParams(request, response);
 			}else if (APIConst.APIID_CELLPARAMS.equals(apiStr)) {//获取cell元素  参数：dbid,usercode,pcell
 				getMenuCells(request, response); 
@@ -143,6 +143,8 @@ public class WebServiceAPI extends HttpServlet {
 				WriteJsonString(response, error);
 			}else if(APIConst.APIID_EXPDATA.equals(apiStr)){//导出Excel
 				expData(request, response);
+			}else if(APIConst.APIID_UPPWD.equals(apiStr)){
+				updatePwd(request, response);
 			}else{
 				error.setMessage("错误的请求："+apiStr);
 				WriteJsonString(response, error);
@@ -152,7 +154,32 @@ public class WebServiceAPI extends HttpServlet {
 			WriteJsonString(response, error);
 		}  
 	} 
-	
+	//web端修改密码
+	private void updatePwd(HttpServletRequest request,HttpServletResponse response){
+		ReturnObj reoReturnObj = new ReturnObj();
+		try {
+			String dbid = request.getParameter("dbid"), userCode = request.getParameter("usercode");
+			String oldPwd = request.getParameter("oldPwd"), newPwd = request.getParameter("newPwd");
+			HttpSession hss = request.getSession();
+			HashMap<String, Object> mp = APIUtil.getdbuser(dbid, userCode);
+			APIUtil.cpTOHttpSession(mp, hss); 
+			if(!checkLogin(response, hss, reoReturnObj))
+				return ;
+			if(!CCliTool.isNull(oldPwd, true))
+				oldPwd = EDCodeUtil.decodeData(oldPwd); 
+			oldPwd = SKeyMang.toTran(dbid, oldPwd, true);// ;-转化成密文方式
+			if(!CCliTool.isNull(newPwd, true))
+				newPwd = EDCodeUtil.decodeData(newPwd); 
+			newPwd = SKeyMang.toTran(dbid, newPwd, true);// ;-转化成密文方式 
+			universaInvoke(cl.CLPF.MS_INITPASS,cl.CLPF.MenuServ, null, new Object[]{CMain.USRCODE,newPwd + "\n" + oldPwd}, false, hss);
+			reoReturnObj.makeSuccess("密码修改成功！"); 
+		} catch (Exception e) { 
+			e.printStackTrace();
+			reoReturnObj.makeSuccess("密码修改失败！");
+		}finally{ 
+			WriteJsonString(response, reoReturnObj);
+		}
+	}
 	/**
 	 * 处理RPT信息
 	 * @param request
@@ -490,111 +517,6 @@ public class WebServiceAPI extends HttpServlet {
 			WriteJsonString(res, ret);
 
 		}
-	}
-
-	/***
-	 * 获取菜单参数 并获取数据 暂时未用到
-	 * @param request
-	 * request中的参数：pbuid,dbid,usercode,pmenuid
-	 * @param response
-	 * @throws Exception
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	protected void procdbf(HttpServletRequest request,
-			HttpServletResponse response) throws Exception {
-		String buid = request.getParameter(cl.ICL.pbuid), dbid = request
-				.getParameter("dbid"), userCode = request
-				.getParameter("usercode");
-		String sfld = cl.ICL.DBFILED, s0 = "select " + sfld + ",pbds";
-		HttpSession hss = request.getSession();
-		HashMap<String, Object> mp = APIUtil.getdbuser(dbid, userCode);
-		APIUtil.cpTOHttpSession(mp, hss);
-		ReturnObj reoReturnObj = new ReturnObj();
-		if (!checkLogin(response, hss, reoReturnObj))
-			return;
-		String sex = (String) hss.getAttribute(cl.ICL.WA_LANG);
-		boolean bex = sex != null && sex.length() > 0;
-		if (bex) {
-			sex = cl.ICL.playout + sex;
-			s0 += "," + sex;
-		}
-		s0 += " from insurl where pbuid='" + buid + "'";
-		int ico = CPubTool.to_co((Number) hss.getAttribute(cl.ICL.CORPCODE));
-		if (ico > 0)
-			s0 += " and (" + cl.ICL.F_CORP + "<1 or " + cl.ICL.F_CORP + "="
-					+ (ico & 0xFFFF) + ")";
-		Object os0[] = (Object[]) checkMenu(request, s0, hss), o1 = os0[1];
-		if (o1 == null)
-			throw new RuntimeException("insurl: " + buid);
-		Hashtable hts = CPubTool.toParas(sfld, (Object[]) o1);
-		if (bex) {
-			sex = (String) hts.get(sex);// 优先采用外语布局。
-			if (sex != null && sex.length() > 0)
-				hts.put(cl.ICL.playout, sex);
-		}
-		readParas(request, response, hts, true);
-		Object otr = os0[0];
-		if (otr != null)
-			checkAttr(hts, otr);
-		s0 = getParameter(cl.ICL.plabel, request);
-		String clazz = CCliTool.objToString(hts.get(cl.ICL.pclass));
-		clazz = clazz == null ? "" : clazz;
-		boolean isbill = true;
-		if (clazz.length() > 0) {
-			if (!clazz.equals("inetbas.cli.cenv.CBaseApplet")) {
-				isbill = false;
-			}
-		}
-		if (s0 != null && s0.length() > 0)
-			hts.put(cl.ICL.plabel, s0);
-		Object cells = universaInvoke(34, cl.CLPF.SUnivServ, null, new Object[] { hts.get(cl.ICL.pcell) }, false, hss);
-		Cells c1 = null, tjcell = null;
-		if (cells instanceof Cells) {
-			c1 = (Cells) cells;
-			c1.init();
-			CellsUtil.initCells(((Cells) cells));
-		} else {
-			Cells[] cells2 = (Cells[]) cells;
-			CellsUtil.initCells(cells2);
-			for (int i = 0; i < cells2.length; i++) {
-				Cells ci = cells2[i];
-				if ((ci.attr & ICL.ocCondiction) > 0 && !isbill) {
-					tjcell = ci;
-				}
-				if ((ci.attr & ICL.ocCondiction) == 0) {
-					c1 = ci;
-					break;
-				}
-			}
-		}
-		int currPage = CCliTool
-				.objToInt(request.getParameter("currentPage"), 0);
-		_log.info("currentPage:" + currPage);
-		int pageSize = CCliTool.objToInt(request.getParameter("pageSize"), 20);
-		_log.info("pageSize:" + pageSize);
-		String cellid = request.getParameter("cellid");
-		cellid = cellid == null ? "" : cellid;
-		if (cellid.length() > 0) {
-			c1 = c1.getChild(cellid, false);
-		}
-		PageLayOut pageLayOut = new PageLayOut(currPage, pageSize,
-				(String)hts.get(cl.ICL.pdata));
-		LayCells layCells = new LayCells(c1);
-		makeValues(hss, c1, pageLayOut);
-		reoReturnObj.makeSuccess();
-		Map retMap = new HashMap<String, Object>();
-		if (!isbill) {
-			LayCells contLayCel = new LayCells(tjcell);
-			retMap.put("contCel", contLayCel);
-		}
-		if (cellid.length() == 0) {
-			retMap.put("menuparam", hts);
-			retMap.put("layCels", layCells);
-			retMap.put("beBill", isbill);
-		}
-		retMap.put("pages", pageLayOut);
-		reoReturnObj.setData(retMap);
-		WriteJsonString(response, reoReturnObj);
 	}
 	/***
 	 * 获取菜单参数 不获取数据

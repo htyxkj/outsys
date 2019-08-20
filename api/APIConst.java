@@ -17,7 +17,8 @@ public class APIConst {
 	public static final String APIID_OUTLOGIN="outlogin";
 	//单点登录需要秘钥
 	public static final String APIID_SINGLELOGIN="inglelogin";
-
+	//修改密码
+	public static final String APIID_UPPWD = "uppwd";
 	// 获取菜单参数和cell总Id，
 	public static final String APIID_MPARAMS="mparam";
 	//获取cellID 
