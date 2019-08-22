@@ -21,10 +21,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cl.ICL;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-
-import cl.ICL;
 
 
 /**
@@ -56,7 +56,9 @@ public class WebRabbitMQInvoke extends DBInvoke {
 		}
 		if(id == APIConst.APIID_TM_MSG_DTL){
 			PageLayOut page = (PageLayOut) wa.params[0];
-			return getIMList(eq,page);
+			String keyword= CCliTool.objToString(wa.params[1]);
+			keyword = keyword==null?"":keyword;
+			return getIMList(eq,page,keyword);
 		}
 		if(id == APIConst.APIID_TM_MSG_UPD){
 			int iid = CCliTool.objToInt(wa.params[0],0);
@@ -82,19 +84,15 @@ public class WebRabbitMQInvoke extends DBInvoke {
 	 * @param eq
 	 * @param uSRCODE
 	 */
-	private PageLayOut getIMList(SQLExecQuery eq, PageLayOut page) {
-		//select a.iid,a.smake,a.dmake,a.dkeep,a.stitle,a.sdsc,sfile,fj_root,brd from insmsg a inner join insmsga b 
-		//on b.iid=a.iid where b.touser='admin' and b.brd in (0,1)
-		// brd:0:公共;1:个人;2:已读
-		//select iid,smake,dmake,stitle,sdsc,brd from (select row_number() over (order by dmake) _r,iid,smake,dmake,stitle,sdsc,brd from v_msg where brd in (0,1) and touser='admin') b where _r>10
+	private PageLayOut getIMList(SQLExecQuery eq, PageLayOut page,String keyword) {
 		int st = (page.currentPage-1)*page.pageSize;
 		int end = st+page.pageSize+1;
-		String countSQL = "select count(*) from v_sysmsg where brd in (0,1) and touser='"+userWaorgusr.USRCODE+"'";
+		String countSQL = "select count(*) from v_sysmsg where brd in (0,1) and touser='"+userWaorgusr.USRCODE+"' and (iid like '%"+keyword+"%' or smake like '%"+keyword+"%' or dmake like '%"+keyword+"%' or stitle  like '%"+keyword+"%' or sdsc  like '%"+keyword+"%' )";
 		String sql = "";
 		if(eq.db_type == ICL.MSSQL)
-			sql="select iid,smake,dmake,stitle,sdsc,brd from (select row_number() over (order by dmake) _r,iid,smake,dmake,stitle,sdsc,brd from v_sysmsg where brd in (0,1) and touser='"+userWaorgusr.USRCODE+"') b where _r>"+st+" and _r<"+end;
+			sql="select iid,smake,dmake,stitle,sdsc,brd from (select row_number() over (order by dmake) _r,iid,smake,dmake,stitle,sdsc,brd from v_sysmsg where brd in (0,1) and touser='"+userWaorgusr.USRCODE+"' and (iid like '%"+keyword+"%' or smake like '%"+keyword+"%' or dmake like '%"+keyword+"%' or stitle  like '%"+keyword+"%' or sdsc  like '%"+keyword+"%')) b where _r>"+st+" and _r<"+end;
 		else {
-			sql="select iid,smake,dmake,stitle,sdsc,brd from v_sysmsg brd in (0,1) and touser='"+userWaorgusr.USRCODE+"' limit "+st+","+page.pageSize;
+			sql="select iid,smake,dmake,stitle,sdsc,brd from v_sysmsg brd in (0,1) and touser='"+userWaorgusr.USRCODE+"' and (iid like '%"+keyword+"%' or smake like '%"+keyword+"%' or dmake like '%"+keyword+"%' or stitle  like '%"+keyword+"%' or sdsc  like '%"+keyword+"%') limit "+st+","+page.pageSize;
 		}
 		try {
 			int count = CCliTool.objToInt(eq.queryOne(countSQL, -1),-1);
