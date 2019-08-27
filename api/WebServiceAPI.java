@@ -10,6 +10,7 @@ import inetbas.pub.coob.CRecord;
 import inetbas.pub.coob.Cell;
 import inetbas.pub.coob.Cells;
 import inetbas.pub.cutil.CPubTool;
+import inetbas.serv.fzj.WhatEver;
 import inetbas.sserv.SQLConnection;
 import inetbas.sserv.SQLExecQuery;
 import inetbas.web.cutil.WAToolkit;
@@ -143,7 +144,7 @@ public class WebServiceAPI extends HttpServlet {
 				WriteJsonString(response, error);
 			}else if(APIConst.APIID_EXPDATA.equals(apiStr)){//导出Excel
 				expData(request, response);
-			}else if(APIConst.APIID_UPPWD.equals(apiStr)){
+			}else if(APIConst.APIID_UPPWD.equals(apiStr)){//修改密码
 				updatePwd(request, response);
 			}else{
 				error.setMessage("错误的请求："+apiStr);
@@ -353,15 +354,10 @@ public class WebServiceAPI extends HttpServlet {
 		try {
 			String ioutsys = null;
 			ioutsys = request.getParameter("ioutsys");
-			ioutsys = ioutsys == null?"1":ioutsys;
-			//钉钉信息
-			String ding = request.getParameter("ding");
-			String code = request.getParameter("code");
-			String corpId = request.getParameter("corpId");
-			
+			ioutsys = ioutsys == null?"1":ioutsys; 
 			String dbid = request.getParameter("dbid"); 
 			String userCode = request.getParameter("usercode");
-			String saddr = request.getRemoteAddr();
+			String saddr = request.getRemoteAddr();//登录IP
 			//验证注册信息
 			WebAppPara _wa = new WebAppPara();
 			_wa.oprid = 0; 
@@ -375,9 +371,15 @@ public class WebServiceAPI extends HttpServlet {
 				ret.setMessage(obj[1].toString());
 				WriteJsonString(res, ret);
 				return ;
-			}
+			} 
+			//钉钉信息
+			String ding = request.getParameter("ding");
 			//钉钉登录  从钉钉获取userid
+			//后期要改
+			/********************************************************************************/
 			if(ding!=null){
+				String code = request.getParameter("code");
+				String corpId = request.getParameter("corpId");
 				_wa.oprid = 200; 
 				_wa.procName = "inetbas.web.webpage.ddserv.DingWorkMang"; 
 				_wa.params = new Object[] {code,corpId};
@@ -385,6 +387,17 @@ public class WebServiceAPI extends HttpServlet {
 				_wa.db_id = dbid;
 				Object u = _app.universalInvoke(_wa);
 				userCode = CCliTool.objToString(u);
+			}
+			/********************************************************************************/
+			//微信小程序登录
+			String wxAppLetsSecret =request.getParameter("wxAppLetsSecret");
+			if(wxAppLetsSecret!=null){
+				wxAppLetsSecret = WhatEver.Base64Decode(wxAppLetsSecret);
+				int k1 = WhatEver.pkey[0];
+				int k2 = WhatEver.pkey[1];
+				int k3 = WhatEver.pkey[2]; 
+				String[] strArr = wxAppLetsSecret.split(WhatEver.DIV_CELL+"");
+				userCode = WhatEver.toTran(strArr[0], false, k1, k2, k3);
 			}
 			int cf = CCliTool.objToInt(ioutsys, 0)-1<0?0:CCliTool.objToInt(ioutsys, 0)-1;
 			int aa = (int) Math.pow(2,cf); 

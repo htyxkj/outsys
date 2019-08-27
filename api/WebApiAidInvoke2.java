@@ -83,8 +83,10 @@ public class WebApiAidInvoke2 extends DBInvoke {
 			} else if (id == AID_CL) {
 				return getCLInfoById(eq, oid,true);
 			}else if (id == AID_I_UPDATE){
+				_log.info("辅助修改："+oid);
 				getBipInsAidInfoById(eq, oid, true,true);
 			} else if (id == AID_CL_UPDATE){
+				_log.info("常量修改："+oid);
 				getCLInfoById(eq, oid,true);
 			} else if (id == AID_I_DEL){
 				delBipInsAidInfoById(eq,oid);
@@ -167,6 +169,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 	 * 2019-07-11 17:39:59
 	 */
 	public void delCLInfoById(SQLExecQuery eq, String clid) throws Exception {
+		_log.info("重置redis常量缓存信息："+clid);
 		if(clid !=null){
 			String key = eq.db_id + REDISAIDCL + clid;
 			RedisHelper.delAllObject(key);
@@ -435,6 +438,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 	 * @return
 	 */
 	public static void delBipInsAidInfoById(SQLExecQuery eq, String id) {
+		_log.info("重置redis辅助缓存信息："+id);
 		if(id !=null){
 			// Redis中存储的Key值
 			String key = eq.db_id + REDISAID + id;
