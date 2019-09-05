@@ -30,10 +30,11 @@ public class Menu implements Serializable {
         
     }
 
-    public Menu(String menuId, String menuName, String cmd) {
+    public Menu(String menuId, String menuName, String cmd,String menuIcon) {
         this.menuId = menuId;
         this.menuName = menuName;
         this.command = cmd;
+        this.menuIcon = menuIcon;
 
     }
     @JSONField(name="menuId")

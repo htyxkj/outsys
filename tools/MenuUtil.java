@@ -22,6 +22,7 @@ public class MenuUtil {
             String menuId = CCliTool.objToString(menuObj[0]);
             String menuName = CCliTool.objToString(menuObj[1]);
             String cmd = CCliTool.objToString(menuObj[2]);
+            String menuIcon = CCliTool.objToString(menuObj[6]);
             int  menuAttr = CCliTool.objToInt(menuObj[5],2);
             if(cmd!=null){
             	if(cmd.indexOf("pbuid")>0){
@@ -34,7 +35,7 @@ public class MenuUtil {
 					cmd="";
 				}
             }
-            Menu menuTemp = new Menu(menuId,menuName,cmd);
+            Menu menuTemp = new Menu(menuId,menuName,cmd,menuIcon);
             menuTemp.setMenuattr(menuAttr);
             while (!menuId.startsWith(Inet.trimLevel(nd0.getMenuId()))) {
                 nd0 = nd0.getParentMenu();

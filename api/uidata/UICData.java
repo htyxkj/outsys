@@ -3,11 +3,13 @@
  */
 package inetbas.web.outsys.api.uidata;
 
+import inetbas.web.outsys.entity.PageInfo;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import inetbas.web.outsys.entity.PageInfo;
+import com.alibaba.fastjson.JSONObject;
 
 /**
  * web端数据集合
@@ -19,6 +21,7 @@ public class UICData implements Serializable {
 	private List<UIRecord> data, rmdata;//数据对象集合，移除对象的集合
 	private int index = -1, attr;
 	private boolean _bnull = true;
+	private List<JSONObject> sumData;
 	
 	private PageInfo page = new PageInfo();
 	public UICData() {
@@ -101,6 +104,14 @@ public class UICData implements Serializable {
 
 	public void setRmdata(List<UIRecord> rmdata) {
 		this.rmdata = rmdata;
+	}
+
+	public List<JSONObject> getSumData() {
+		return sumData;
+	}
+
+	public void setSumData(List<JSONObject> sumData) {
+		this.sumData = sumData;
 	}
 	
 	

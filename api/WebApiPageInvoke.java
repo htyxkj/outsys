@@ -163,11 +163,12 @@ public class WebApiPageInvoke extends DBInvoke {
 		SQLInfoE ss = SQLUtils.makeSqlInfo(st0,qe,eq.db_type);
 		String totalSQL =  ss.getTotalSql();
 		String pageSQL = ss.getPagingSql();
-		return getBillData(eq, cell, qe, dbi, attr, b0, extb, totalSQL, pageSQL);
+		String fromSQL = ss.getSqlfrom();
+		return getBillData(eq, cell, qe, dbi, attr, b0, extb, totalSQL, pageSQL,fromSQL);
 	}
 
 	public static UICData getBillData(SQLExecQuery eq, Cells cell, QueryEntity qe, DBInvoke dbi, long attr, boolean b0,
-			String extb, String totalSQL, String pageSQL) throws Exception {
+			String extb, String totalSQL, String pageSQL,String formSQL) throws Exception {
 		int t0;
 		int total;
 		_log.info(totalSQL);
@@ -213,6 +214,34 @@ public class WebApiPageInvoke extends DBInvoke {
 				List<UIRecord> listData = DataTools.valuesToJsonArray2(v0,cell, 0,extb,qe.getType()>0);
 				data.setData(listData);
 			}
+		}
+		
+		//查询合计字段
+		String sumStr = "";
+		List<Cell> listC = new ArrayList<Cell>();
+		for (int i = 0; i < cell.all_cels.length; i++) {
+			Cell cel = cell.all_cels[i];
+			if((cel.attr & 0x2000)>0){
+				listC.add(cel);
+				
+				sumStr += "sum("+cel.ccName+") as "+cel.ccName+","; 
+			}
+		}
+		if(listC.size()>=1){
+			List<JSONObject> listj = new ArrayList<JSONObject>();
+			sumStr = sumStr.substring(0,sumStr.length()-1);
+			System.out.println(sumStr);
+			String sumSQL = "select "+sumStr+" "+formSQL;			
+			Object[] obj = eq.queryRow(sumSQL, false);
+			for(int i=0;i<listC.size();i++){
+				JSONObject json = new JSONObject();
+				Cell cel = listC.get(i);
+				json.put("ccName", cel.ccName);
+				json.put("labelString", cel.labelString);
+				json.put("initval", obj[i]);
+				listj.add(json);
+			}
+			data.setSumData(listj);
 		}
 		return data;
 	}

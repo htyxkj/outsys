@@ -39,7 +39,7 @@ public class LayCell {
 	public boolean assist = false; //是否是辅助
 	public String assType = null;//辅助类型
 	
-
+	public int widthIndex = 0;//cel宽度下标 只在表格中用到
 	public int ccCharleng=0;//文本框长度
 	public ArrayList<String> refCellIds = new ArrayList<String>();
 	public ArrayList<String> pRefIds = new ArrayList<String>();

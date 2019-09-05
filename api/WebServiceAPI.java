@@ -266,7 +266,7 @@ public class WebServiceAPI extends HttpServlet {
 			 WebAppParaEx wa = new WebAppParaEx(dbid);
 			 wa.oprid = cl.ICL.RQ_LOGIN;//登录id
 			 wa.procName = cl.CLPF.MenuServ;//登录实体类
-			 wa.params =  new Object[] { userCode, pwd,lang,saddr, null };
+			 wa.params =  new Object[] { userCode, pwd,lang,saddr, null ,null};
 			 HashMap<String,Object> hm = APIUtil.getdbuser(dbid, userCode);
 			 if(hm==null){
 				 _log.info("login_b,:",hm);
@@ -405,7 +405,7 @@ public class WebServiceAPI extends HttpServlet {
 			WebAppParaEx wa = new WebAppParaEx(dbid);
 			wa.oprid = 36;// 登录id
 			wa.procName = cl.CLPF.MenuServ;// 登录实体类
-			wa.params = new Object[] { userCode, null, saddr, null, null };
+			wa.params = new Object[] { userCode, null, saddr, null, null,null };
 			HashMap<String, Object> hm = APIUtil.getdbuser(dbid, userCode);
 			APIUtil.login_b(wa, hm, request.getParameter(cl.ICL.applogin),dbid, saddr);// ;--不需要服务登陆接口
 			APIUtil.login_a(_app.universalInvoke(wa), hm);
@@ -494,7 +494,7 @@ public class WebServiceAPI extends HttpServlet {
 			WebAppParaEx wa = new WebAppParaEx(dbid);
 			wa.oprid = 36;// 登录id
 			wa.procName = cl.CLPF.MenuServ;// 登录实体类
-			wa.params = new Object[] { userCode, null, saddr, null, null };
+			wa.params = new Object[] { userCode, null, saddr, null, null ,null};
 			HashMap<String, Object> hm = APIUtil.getdbuser(dbid, userCode);
 			APIUtil.login_b(wa, hm, request.getParameter(cl.ICL.applogin),
 					dbid, saddr);// ;--不需要服务登陆接口
