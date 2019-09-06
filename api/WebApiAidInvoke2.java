@@ -11,6 +11,7 @@ import inetbas.web.outsys.api.uidata.UICData;
 import inetbas.web.outsys.api.uidata.UIRecord;
 import inetbas.web.outsys.entity.BipInsAidNew;
 import inetbas.web.outsys.entity.BipInsAidType;
+import inetbas.web.outsys.entity.BipTreeNode;
 import inetbas.web.outsys.entity.QueryEntity;
 import inetbas.web.outsys.redis.RedisHelper;
 import inetbas.web.outsys.tools.CellsSessionUtil;
@@ -31,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 /**
@@ -65,6 +67,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 		sqlTypes.put(BipInsAidType.CDynaEditor, BipInsAidType.CDynaEditor);
 		sqlTypes.put(BipInsAidType.CGroupEditor, BipInsAidType.CGroupEditor);
 		sqlTypes.put(BipInsAidType.CGDicEditor, BipInsAidType.CGDicEditor);
+		sqlTypes.put(BipInsAidType.CTreePopEditor, BipInsAidType.CTreePopEditor);
 //		sqlTypes.put(BipInsAidType.CSelectEditor, BipInsAidType.CSelectEditor);
 //		sqlTypes.put(BipInsAidType.CSelectEditor, BipInsAidType.CSelectEditor);
 	}
@@ -185,7 +188,20 @@ public class WebApiAidInvoke2 extends DBInvoke {
 	public Object getBipInsAidDatas(SQLExecQuery eq, String oid, QueryEntity qe) throws Exception {
 		BipInsAidNew bAidNew = getBipInsAidInfoById(eq, oid, false,false);
 		if (bAidNew != null && qe != null) {
-			if (sqlTypes.containsKey(bAidNew.getbType())) {
+			if(BipInsAidType.CTreePopEditor.equals(bAidNew.getbType())) {
+				//树状结构取数
+				String sql = CommUtils.formartSql(bAidNew.getSlink());
+				sql = SSTool.formatVar(sql, eq);
+				_log.info(sql);
+				HVector hh = eq.queryVec(sql);
+				ArrayList<JSONObject> list = new ArrayList<JSONObject>();
+				if(hh==null) {
+					bAidNew.setValues(list);
+				}else {
+					return CommUtils.makeTree(hh,bAidNew.getCells());
+				}
+				return null;
+			}else if (sqlTypes.containsKey(bAidNew.getbType())) {
 				// SQL语句辅助查询
 				getBipInsAidDatasBySqls(eq, qe, bAidNew);
 			} else if (BipInsAidType.CQueryEditor.equals(bAidNew.getbType())) {
@@ -261,7 +277,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 				for(int i=0;i<hh.size();i++) {
 					Object[] o0 = (Object[])hh.elementAt(i);
 					UIRecord record = new UIRecord();
-					JSONObject jdata = objectsToJsonObj(o0,cells2);
+					JSONObject jdata = CommUtils.objectsToJsonObj(o0,cells2);
 					record.setData(jdata);
 					data.add(record, -1);
 				}
@@ -391,17 +407,7 @@ public class WebApiAidInvoke2 extends DBInvoke {
 		return list;
 	}
 	
-	public static JSONObject objectsToJsonObj(Object[] oo, LayCell[] cells) {
-		JSONObject jo = new JSONObject();
-		for (int m = 0; m < cells.length && m < oo.length; m++) {
-			LayCell cell = cells[m];
-			if (cell.type == 91 || cell.type == 93) {
-				jo.put(cell.id, CCliTool.dateToString(oo[m], true, cell.type == 91 ? 1 : 8));
-			} else
-				jo.put(cell.id, oo[m]);
-		}
-		return jo;
-	}
+	
 
 	/**
 	 * 获取产品换算单位信息
@@ -819,6 +825,8 @@ public class WebApiAidInvoke2 extends DBInvoke {
 			bipInsAid.setbType(BipInsAidType.CYMEditor);
 		} else if (sclass.endsWith("CGDicEditor")) {
 			bipInsAid.setbType(BipInsAidType.CGDicEditor);
+		}else if (sclass.endsWith("CTreePopEditor")) {
+			bipInsAid.setbType(BipInsAidType.CTreePopEditor);
 		}
 	}
 

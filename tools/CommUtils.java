@@ -3,15 +3,20 @@
  */
 package inetbas.web.outsys.tools;
 
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 import com.alibaba.fastjson.JSONObject;
 
 import inet.HVector;
+import inet.Inet;
 import inetbas.cli.cutil.CCliTool;
 import inetbas.cli.cutil.CCliToolEx;
 import inetbas.cli.cutil.CDBLINK;
 import inetbas.pub.coob.Cells;
+import inetbas.web.outsys.entity.BipTreeNode;
+import inetbas.web.outsys.uiparam.LayCell;
+import inetbas.web.outsys.uiparam.LayCells;
 
 /**
  * @author www.bip-soft.com 2019-07-02 11:09:22
@@ -251,15 +256,43 @@ public class CommUtils {
 		return os0;
 	}
 	
-	   public static boolean isNumber(String string) {
-	        if (string == null)
-	            return false;
-	        Pattern pattern = Pattern.compile("^-?\\d+(\\.\\d+)?$");
-	        return pattern.matcher(string).matches();
-	    }
-	   
-	  
-	   
-	
+   public static boolean isNumber(String string) {
+        if (string == null)
+            return false;
+        Pattern pattern = Pattern.compile("^-?\\d+(\\.\\d+)?$");
+        return pattern.matcher(string).matches();
+    }
+   
+   public static ArrayList<BipTreeNode> makeTree(HVector hh,LayCells cells){
+	   BipTreeNode root = new BipTreeNode("","ROOT");
+	   BipTreeNode nd0 = root;
+       for(int i=0;i<hh.size();i++){
+           Object[] menuObj = (Object[]) hh.elementAt(i);
+           String id = CCliTool.objToString(menuObj[0]);
+           String label = id;
+           if(menuObj.length>1)
+        	   label = CCliTool.objToString(menuObj[1]);
+           BipTreeNode node = new BipTreeNode(id,label);
+           node.setData(objectsToJsonObj(menuObj,cells.cels));
+           while (!id.startsWith(Inet.trimLevel(nd0.getId()))) {
+               nd0 = nd0.getParentNode();
+           }
+           nd0.addChild(node);
+           nd0 = node;
+       }
+       return root.getChildren();
+   }
+   
+   public static JSONObject objectsToJsonObj(Object[] oo, LayCell[] cells) {
+		JSONObject jo = new JSONObject();
+		for (int m = 0; m < cells.length && m < oo.length; m++) {
+			LayCell cell = cells[m];
+			if (cell.type == 91 || cell.type == 93) {
+				jo.put(cell.id, CCliTool.dateToString(oo[m], true, cell.type == 91 ? 1 : 8));
+			} else
+				jo.put(cell.id, oo[m]);
+		}
+		return jo;
+	}
 	
 }

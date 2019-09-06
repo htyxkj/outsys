@@ -19,5 +19,6 @@ public enum BipInsAidType {
 	CUpDownEditor,//上传下载编辑器
 	CYMEditor,//年月
 	CGDicEditor,//商品辅助类型
+	CTreePopEditor,//树状结构表
 	
 }
