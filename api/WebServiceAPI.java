@@ -113,7 +113,7 @@ public class WebServiceAPI extends HttpServlet {
 				saveData(request,response);
 			}else if (APIConst.APIID_FINDDATA.equals(apiStr)){//查询对象数据
 				findValues(request, response);
-			} else if(APIConst.APIID_CHKUP.equals(apiStr)) {
+			} else if(APIConst.APIID_CHKUP.equals(apiStr)) {//审批流
 				try {
 					checkAndSubmit(request,response);
 				} catch (Exception e) {
@@ -176,7 +176,7 @@ public class WebServiceAPI extends HttpServlet {
 			reoReturnObj.makeSuccess("密码修改成功！"); 
 		} catch (Exception e) { 
 			e.printStackTrace();
-			reoReturnObj.makeSuccess("密码修改失败！");
+			reoReturnObj.makeFaile("密码修改失败！");
 		}finally{ 
 			WriteJsonString(response, reoReturnObj);
 		}

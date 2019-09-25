@@ -11,7 +11,6 @@ import inetbas.web.outsys.api.uidata.UICData;
 import inetbas.web.outsys.api.uidata.UIRecord;
 import inetbas.web.outsys.entity.BipInsAidNew;
 import inetbas.web.outsys.entity.BipInsAidType;
-import inetbas.web.outsys.entity.BipTreeNode;
 import inetbas.web.outsys.entity.QueryEntity;
 import inetbas.web.outsys.redis.RedisHelper;
 import inetbas.web.outsys.tools.CellsSessionUtil;
@@ -32,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 /**
@@ -192,6 +190,14 @@ public class WebApiAidInvoke2 extends DBInvoke {
 				//树状结构取数
 				String sql = CommUtils.formartSql(bAidNew.getSlink());
 				sql = SSTool.formatVar(sql, eq);
+				_log.info(sql);
+				if(qe.getCont().length()>0){
+					qe.setCont(bAidNew.getSref()+"='"+ qe.getCont()+"'");
+				}else{
+					qe.setCont("isnull("+bAidNew.getSref()+",'')= ''");
+				}
+				SQLInfoE sqlInfo = SQLUtils.makeSqlInfo(sql, qe, eq.db_type);
+				sql = sqlInfo.getPagingSql();
 				_log.info(sql);
 				HVector hh = eq.queryVec(sql);
 				ArrayList<JSONObject> list = new ArrayList<JSONObject>();

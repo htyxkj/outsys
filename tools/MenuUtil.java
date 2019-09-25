@@ -31,7 +31,9 @@ public class MenuUtil {
 //            		cmd = URLEncoder.encode(cmd);
             	}else if(cmd.indexOf("customize")>0){
             		cmd = cmd.substring(cmd.indexOf("?")+1);
-            	}else {
+            	}else if(cmd.indexOf("pmenu")>0){
+            		cmd = cmd.substring(cmd.indexOf("?")+1)+"&"+ ICL.pmenuid+"="+menuId;
+            	}else{
 					cmd="";
 				}
             }

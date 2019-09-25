@@ -221,16 +221,18 @@ public class WebApiPageInvoke extends DBInvoke {
 		List<Cell> listC = new ArrayList<Cell>();
 		for (int i = 0; i < cell.all_cels.length; i++) {
 			Cell cel = cell.all_cels[i];
-			if((cel.attr & 0x2000)>0){
+			if((cel.attr & 0x2000)>0 && (cel.attr & 0x400)<=0){
 				listC.add(cel);
-				
+				String ccName = cel.ccName;
+				if(ccName.indexOf(".") != -1){
+					ccName = ccName.substring(ccName.indexOf("."),ccName.length());
+				}
 				sumStr += "sum("+cel.ccName+") as "+cel.ccName+","; 
 			}
 		}
 		if(listC.size()>=1){
 			List<JSONObject> listj = new ArrayList<JSONObject>();
 			sumStr = sumStr.substring(0,sumStr.length()-1);
-			System.out.println(sumStr);
 			String sumSQL = "select "+sumStr+" "+formSQL;			
 			Object[] obj = eq.queryRow(sumSQL, false);
 			for(int i=0;i<listC.size();i++){
@@ -248,7 +250,7 @@ public class WebApiPageInvoke extends DBInvoke {
 	
 	
 	public String exportFile(SQLExecQuery eq, Object[] ops) throws Exception {
-
+		int t0;
 		String st0 =null;
 		String sc = null;
 		
@@ -274,6 +276,25 @@ public class WebApiPageInvoke extends DBInvoke {
 		}else{
 			sc = CommUtils.getContStr(tcell, qe.getCont());
 		}
+		if (sc != null && sc.length() > 0) {
+			char c0 = sc.charAt(0);
+			if (c0 >= '0' && c0 <= '9') {
+				t0 = sc.indexOf('#');// ;-加取行数限制
+				if (t0 > 0 && t0 < 5) {
+//					topn = Integer.parseInt(sc.substring(0, t0), 10);
+					sc = sc.substring(t0 + 1);
+					if (sc.length() > 0)
+						c0 = sc.charAt(0);
+				}
+			}
+			if (c0 == ',') {
+				t0 = sc.indexOf('&');// ;-检查引用表及关联条件
+				st0 = sc.substring(1, t0);
+				sc = sc.substring(t0 + 1);
+			}
+		}
+		if (sc != null && sc.length() > 0)
+			sc = SSTool.formatVarMacro(sc, eq);
 		st0 = spelSQL(eq, cell, 0, sc, true, st0, this);
 		HVector hh = eq.queryVec(st0);
 		hh = getReference(hh, cell,eq);
